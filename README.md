@@ -5,8 +5,7 @@ O **MesclaInvest** é um aplicativo de investimentos mobile, desenvolvido como p
 A plataforma simula a negociação de tokens representativos de startups, permitindo que usuários entendam a dinâmica de aportes e valorização em um ambiente controlado.
 
 ## 👥 Integrantes
-- CAIO JOSÉ BURDIM MENALI (Frontend) - RA: 25013468  
-- JOSÉ WANDERLEY DE SOUZA TEIXEIRA NETO - RA:  
+- CAIO JOSÉ BURDIM MENALI (Frontend) - RA: 25013468    
 - LUCCA SCHROELDER SCOVINI (Frontend) - RA: 24011609  
 - PAULO CESAR WHITEHEAD JUNIOR (Banco de dados/Backend) - RA: 24018776  
 - THIAGO RYUJI OGAWA (Infra/Backend)- RA: 24024450  
