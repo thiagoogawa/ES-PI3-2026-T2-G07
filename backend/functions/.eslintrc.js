@@ -30,5 +30,23 @@ module.exports = {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
     "indent": ["error", 2],
+    "new-cap": [
+      "error",
+      { "properties": false, "capIsNewExceptions": ["Router"] },
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "argsIgnorePattern": "^_" },
+    ],
+    "require-jsdoc": 0,
+    "valid-jsdoc": 0,
   },
+  overrides: [
+    {
+      files: [".eslintrc.js"],
+      rules: {
+        "object-curly-spacing": 0,
+      },
+    },
+  ],
 };
