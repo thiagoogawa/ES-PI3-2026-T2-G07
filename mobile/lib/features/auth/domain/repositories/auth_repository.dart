@@ -1,6 +1,8 @@
 import '../entities/authenticated_user.dart';
 
 abstract class AuthRepository {
+  Future<AuthenticatedUser?> getCurrentUser();
+
   Future<AuthenticatedUser> signIn({
     required String email,
     required String password,

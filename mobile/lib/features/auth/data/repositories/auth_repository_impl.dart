@@ -10,6 +10,16 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._authRemoteDataSource, this._authApiDataSource);
 
   @override
+  Future<AuthenticatedUser?> getCurrentUser() async {
+    if (!_authRemoteDataSource.isSignedIn) {
+      return null;
+    }
+
+    final idToken = await _authRemoteDataSource.getIdToken();
+    return _authApiDataSource.fetchMe(idToken);
+  }
+
+  @override
   Future<AuthenticatedUser> signIn({
     required String email,
     required String password,

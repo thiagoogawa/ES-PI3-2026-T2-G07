@@ -16,6 +16,8 @@ class AuthRemoteDataSource {
     );
   }
 
+  bool get isSignedIn => _firebaseAuth.currentUser != null;
+
   Future<UserCredential> signUp({
     required String email,
     required String password,

@@ -12,6 +12,40 @@ class AuthController extends ChangeNotifier {
   String? errorMessage;
   AuthenticatedUser? currentUser;
 
+  Future<void> restoreSession() async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      currentUser = await _authRepository.getCurrentUser();
+    } catch (error) {
+      errorMessage = mapAuthException(error);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  String? validateCredentials({
+    required String email,
+    required String password,
+  }) {
+    if (email.isEmpty || password.isEmpty) {
+      return 'Preencha e-mail e senha.';
+    }
+
+    if (!email.contains('@')) {
+      return 'Digite um e-mail valido.';
+    }
+
+    if (password.length < 6) {
+      return 'A senha deve ter pelo menos 6 caracteres.';
+    }
+
+    return null;
+  }
+
   Future<void> signIn({required String email, required String password}) async {
     isLoading = true;
     errorMessage = null;

@@ -3,6 +3,7 @@ import '../../../../core/network/api_client.dart';
 import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../domain/entities/authenticated_user.dart';
 import '../controllers/auth_controller.dart';
 import 'home_page.dart';
 
@@ -32,8 +33,9 @@ class _LoginPageState extends State<LoginPage> {
 
     controller.addListener(() {
       if (controller.currentUser != null && mounted) {
+        final authenticatedUser = controller.currentUser as AuthenticatedUser;
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomePage(controller: controller)),
+          MaterialPageRoute(builder: (_) => HomePage(user: authenticatedUser)),
         );
       }
 
@@ -45,6 +47,8 @@ class _LoginPageState extends State<LoginPage> {
 
       setState(() {});
     });
+
+    controller.restoreSession();
   }
 
   @override
@@ -56,6 +60,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    final validationError = controller.validateCredentials(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    if (validationError != null && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(validationError)));
+      return;
+    }
+
     await controller.signIn(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
@@ -63,6 +79,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleSignUp() async {
+    final validationError = controller.validateCredentials(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    if (validationError != null && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(validationError)));
+      return;
+    }
+
     await controller.signUp(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
