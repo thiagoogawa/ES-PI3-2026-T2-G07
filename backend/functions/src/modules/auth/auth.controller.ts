@@ -16,7 +16,7 @@ export class AuthController {
       throw new AuthError();
     }
 
-    const user = AuthService.buildWhoAmI(request.user);
+    const user = await AuthService.buildWhoAmI(request.user);
 
     response
       .status(HTTP_STATUS.OK)
