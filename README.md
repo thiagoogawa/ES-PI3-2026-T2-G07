@@ -15,5 +15,40 @@ A plataforma simula a negociação de tokens representativos de startups, permit
 **Mobile** | Flutter, Dart |  
 **Ferramentas** | Git, GitHub, GitHub Projects, VS Code / Android Studio |  
 
+---
+
+## 🎯 Funcionalidades
+
+### Autenticação
+
+- Cadastro de usuários com e-mail, CPF, telefone e senha
+- Login seguro com recuperação de senha
+
+### Catálogo de Startups
+
+- Visualização de startups cadastradas no ecossistema
+- Informações detalhadas: descrição, estrutura societária, capital aportado
+- Filtros por estágio de desenvolvimento (Nova ideia, Em operação, Em expansão)
+- Acesso a documentos: sumário executivo, plano de negócios, vídeos demo
+
+### Negociação Simulada de Tokens
+
+- Balcão de compra/venda de tokens (simulado)
+- Carteira digital com saldo fictício em reais
+- Ofertas de compra/venda entre usuários cadastrados
+
+### Dashboard de Investimentos
+
+- Acompanhamento de valorização dos tokens
+- Gráficos de variação (diário, semanal, mensal, YTD)
+- Cálculo de tendências baseado em transações simuladas
+
+### Interação com Startups
+
+- Envio de perguntas públicas/privadas aos empreendedores
+- Feed de atualizações e eventos das startups
+
+---
+
 
 
