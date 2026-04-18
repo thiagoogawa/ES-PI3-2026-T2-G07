@@ -6,6 +6,7 @@ import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../controllers/auth_controller.dart';
 import 'home_page.dart';
+import 'reset_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -57,6 +58,15 @@ class _LoginPageState extends State<LoginPage> {
     passwordController.dispose();
     controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _openResetPasswordPage() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            ResetPasswordPage(initialEmail: emailController.text.trim()),
+      ),
+    );
   }
 
   Future<void> _openAuthSheet({required bool isSignUp}) async {
@@ -117,6 +127,36 @@ class _LoginPageState extends State<LoginPage> {
                     style: const TextStyle(color: Colors.white),
                     decoration: _inputDecoration('Senha'),
                   ),
+                  if (!isSignUp) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: controller.isLoading
+                            ? null
+                            : () async {
+                                Navigator.of(sheetContext).pop();
+                                await _openResetPasswordPage();
+                              },
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF84B5FF),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 0,
+                            vertical: 4,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: Size.zero,
+                        ),
+                        child: const Text(
+                          'Esqueceu a Senha?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
@@ -246,47 +286,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const RadialGradient(
-                    colors: [Color(0xFF428FE4), Color(0xFF114CAD)],
-                    center: Alignment(-0.2, -0.3),
-                    radius: 0.9,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x4D114CAD),
-                      blurRadius: 22,
-                      spreadRadius: 4,
-                    ),
-                  ],
-                  border: Border.all(color: const Color(0xFF0D3A86), width: 3),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 174,
-                    height: 174,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0x664E97F0),
-                        width: 2,
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.trending_up_rounded,
-                        size: 88,
-                        color: Color(0xFF0A347A),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const Spacer(),
+              const _MesclaBrandLogo(size: 168),
+              const SizedBox(height: 96),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -298,7 +299,7 @@ class _LoginPageState extends State<LoginPage> {
                     foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(53),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     textStyle: const TextStyle(
                       fontSize: 18,
@@ -320,7 +321,7 @@ class _LoginPageState extends State<LoginPage> {
                     side: const BorderSide(color: Colors.white70, width: 1.6),
                     minimumSize: const Size.fromHeight(53),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     textStyle: const TextStyle(
                       fontSize: 18,
@@ -335,5 +336,69 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+}
+
+class _MesclaBrandLogo extends StatelessWidget {
+  final double size;
+
+  const _MesclaBrandLogo({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: const Color(0xFF111111),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 18,
+            spreadRadius: 1,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: CustomPaint(painter: _MesclaBrandLogoPainter()),
+    );
+  }
+}
+
+class _MesclaBrandLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pinkPaint = Paint()
+      ..color = const Color(0xFFE40062)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.11
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final whitePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width * 0.11
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final pinkPath = Path()
+      ..moveTo(size.width * 0.18, size.height * 0.26)
+      ..lineTo(size.width * 0.76, size.height * 0.26)
+      ..lineTo(size.width * 0.76, size.height * 0.68);
+
+    final whitePath = Path()
+      ..moveTo(size.width * 0.18, size.height * 0.48)
+      ..lineTo(size.width * 0.18, size.height * 0.78)
+      ..lineTo(size.width * 0.76, size.height * 0.78);
+
+    canvas.drawPath(pinkPath, pinkPaint);
+    canvas.drawPath(whitePath, whitePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
   }
 }

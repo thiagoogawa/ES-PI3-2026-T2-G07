@@ -87,4 +87,21 @@ class AuthController extends ChangeNotifier {
     currentUser = null;
     notifyListeners();
   }
+
+  Future<bool> sendPasswordResetEmail({required String email}) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.sendPasswordResetEmail(email: email);
+      return true;
+    } catch (error) {
+      errorMessage = mapAuthException(error);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }
