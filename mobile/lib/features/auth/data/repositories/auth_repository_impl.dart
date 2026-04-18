@@ -32,13 +32,25 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthenticatedUser> signUp({
+    required String fullName,
+    required String cpf,
+    required String phone,
     required String email,
     required String password,
   }) async {
-    await _authRemoteDataSource.signUp(email: email, password: password);
+    await _authRemoteDataSource.signUp(
+      email: email,
+      password: password,
+      fullName: fullName,
+    );
 
-    final idToken = await _authRemoteDataSource.getIdToken();
-    return _authApiDataSource.fetchMe(idToken);
+    final idToken = await _authRemoteDataSource.getIdToken(forceRefresh: true);
+    return _authApiDataSource.updateProfile(
+      idToken,
+      name: fullName,
+      cpf: cpf,
+      phone: phone,
+    );
   }
 
   @override

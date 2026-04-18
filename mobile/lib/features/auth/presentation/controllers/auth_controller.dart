@@ -64,13 +64,22 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({
+    required String fullName,
+    required String cpf,
+    required String phone,
+    required String email,
+    required String password,
+  }) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
       currentUser = await _authRepository.signUp(
+        fullName: fullName,
+        cpf: cpf,
+        phone: phone,
         email: email,
         password: password,
       );

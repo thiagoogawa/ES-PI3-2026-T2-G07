@@ -18,4 +18,22 @@ class AuthApiDataSource {
 
     return AuthenticatedUserModel.fromJson(response);
   }
+
+  Future<AuthenticatedUserModel> updateProfile(
+    String idToken, {
+    required String name,
+    required String cpf,
+    required String phone,
+  }) async {
+    final response = await _apiClient.post(
+      ApiConstants.authProfile,
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body: {'name': name, 'cpf': cpf, 'phone': phone},
+    );
+
+    return AuthenticatedUserModel.fromJson(response);
+  }
 }

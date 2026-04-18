@@ -7,6 +7,7 @@ import '../../domain/entities/authenticated_user.dart';
 import '../controllers/auth_controller.dart';
 import 'home_page.dart';
 import 'reset_password_page.dart';
+import 'signup_flow_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -69,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> _openAuthSheet({required bool isSignUp}) async {
+  Future<void> _openAuthSheet() async {
     emailController.clear();
     passwordController.clear();
 
@@ -96,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isSignUp ? 'Cadastrar-se' : 'Entrar',
+                    'Entrar',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -105,9 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isSignUp
-                        ? 'Crie sua conta para investir nas melhores startups.'
-                        : 'Acesse sua conta para continuar.',
+                    'Acesse sua conta para continuar.',
                     style: const TextStyle(
                       color: Color(0xFFBDBDBD),
                       fontSize: 15,
@@ -127,49 +126,41 @@ class _LoginPageState extends State<LoginPage> {
                     style: const TextStyle(color: Colors.white),
                     decoration: _inputDecoration('Senha'),
                   ),
-                  if (!isSignUp) ...[
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        onPressed: controller.isLoading
-                            ? null
-                            : () async {
-                                Navigator.of(sheetContext).pop();
-                                await _openResetPasswordPage();
-                              },
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFF84B5FF),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 0,
-                            vertical: 4,
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          minimumSize: Size.zero,
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: controller.isLoading
+                          ? null
+                          : () async {
+                              Navigator.of(sheetContext).pop();
+                              await _openResetPasswordPage();
+                            },
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF84B5FF),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 4,
                         ),
-                        child: const Text(
-                          'Esqueceu a Senha?',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        minimumSize: Size.zero,
+                      ),
+                      child: const Text(
+                        'Esqueceu a Senha?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ],
+                  ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: controller.isLoading
                           ? null
-                          : () async {
-                              if (isSignUp) {
-                                await _handleSignUp();
-                              } else {
-                                await _handleLogin();
-                              }
-                            },
+                          : () async => _handleLogin(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3C78D8),
                         foregroundColor: Colors.white,
@@ -187,7 +178,7 @@ class _LoginPageState extends State<LoginPage> {
                                 color: Colors.white,
                               ),
                             )
-                          : Text(isSignUp ? 'Criar conta' : 'Entrar'),
+                          : const Text('Entrar'),
                     ),
                   ),
                 ],
@@ -213,25 +204,6 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     await controller.signIn(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-  }
-
-  Future<void> _handleSignUp() async {
-    final validationError = controller.validateCredentials(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-
-    if (validationError != null && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(validationError)));
-      return;
-    }
-
-    await controller.signUp(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
     );
@@ -293,7 +265,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: ElevatedButton(
                   onPressed: controller.isLoading
                       ? null
-                      : () => _openAuthSheet(isSignUp: false),
+                      : () => _openAuthSheet(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF346AC0),
                     foregroundColor: Colors.white,
@@ -315,7 +287,13 @@ class _LoginPageState extends State<LoginPage> {
                 child: OutlinedButton(
                   onPressed: controller.isLoading
                       ? null
-                      : () => _openAuthSheet(isSignUp: true),
+                      : () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SignupFlowPage(),
+                            ),
+                          );
+                        },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Colors.white70, width: 1.6),

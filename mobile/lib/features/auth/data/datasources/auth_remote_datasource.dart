@@ -21,16 +21,22 @@ class AuthRemoteDataSource {
   Future<UserCredential> signUp({
     required String email,
     required String password,
-  }) {
-    return _firebaseAuth.createUserWithEmailAndPassword(
+    required String fullName,
+  }) async {
+    final credential = await _firebaseAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
+
+    await credential.user?.updateDisplayName(fullName);
+    await credential.user?.reload();
+
+    return credential;
   }
 
-  Future<String> getIdToken() async {
+  Future<String> getIdToken({bool forceRefresh = false}) async {
     final user = _firebaseAuth.currentUser;
-    final token = await user?.getIdToken();
+    final token = await user?.getIdToken(forceRefresh);
 
     if (token == null || token.isEmpty) {
       throw Exception('Unable to get Firebase ID token');

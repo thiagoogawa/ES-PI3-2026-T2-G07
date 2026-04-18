@@ -696,7 +696,7 @@ class _HomePageState extends State<HomePage> {
               crossAxisCount: 2,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
-              childAspectRatio: 0.82,
+              childAspectRatio: 0.74,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) => _buildStartupCard(startups[index]),

@@ -6,5 +6,10 @@ import {asyncHandler} from "../../core/http/async-handler";
 const authRouter = Router();
 
 authRouter.get("/me", authMiddleware, asyncHandler(AuthController.whoAmI));
+authRouter.post(
+  "/profile",
+  authMiddleware,
+  asyncHandler(AuthController.updateProfile),
+);
 
 export {authRouter};

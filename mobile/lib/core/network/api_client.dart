@@ -13,6 +13,24 @@ class ApiClient {
   }) async {
     final response = await _client.get(Uri.parse(url), headers: headers);
 
+    return _parseResponse(response);
+  }
+
+  Future<Map<String, dynamic>> post(
+    String url, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
+    final response = await _client.post(
+      Uri.parse(url),
+      headers: headers,
+      body: body == null ? null : jsonEncode(body),
+    );
+
+    return _parseResponse(response);
+  }
+
+  Map<String, dynamic> _parseResponse(http.Response response) {
     final Map<String, dynamic> body = jsonDecode(response.body);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {

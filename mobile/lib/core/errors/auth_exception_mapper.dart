@@ -10,6 +10,10 @@ String mapAuthException(Object error) {
       case 'wrong-password':
       case 'user-not-found':
         return 'E-mail ou senha incorretos.';
+      case 'email-already-in-use':
+        return 'Ja existe uma conta cadastrada com este e-mail.';
+      case 'weak-password':
+        return 'A senha informada e muito fraca.';
       case 'user-disabled':
         return 'Usuario desativado.';
       case 'too-many-requests':
