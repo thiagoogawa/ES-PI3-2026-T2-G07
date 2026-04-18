@@ -4,6 +4,7 @@ import '../../../../core/network/api_client.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/domain/entities/startup.dart';
+import '../../../startups/presentation/pages/startup_detail_page.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -125,6 +126,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _openStartupDetails(Startup startup) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => StartupDetailPage(startup: startup)),
+    );
+  }
+
   Widget _buildHeader() {
     return Row(
       children: [
@@ -173,103 +180,113 @@ class _HomePageState extends State<HomePage> {
   Widget _buildHeroBanner(List<Startup> startups) {
     final featured = startups.first;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openStartupDetails(featured),
         borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF102853), Color(0xFF1C5DC3)],
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+        child: Ink(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF102853), Color(0xFF1C5DC3)],
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF78AFFF),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'startup em destaque',
+                        style: TextStyle(
+                          color: Color(0xFF0D244A),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      featured.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      featured.sector ?? featured.stage,
+                      style: const TextStyle(
+                        color: Color(0xFFD2E4FF),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton(
+                      onPressed: () => _openStartupDetails(featured),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white70),
+                        minimumSize: const Size(112, 42),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'Confira',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const RadialGradient(
+                    colors: [Color(0xFF4C96EC), Color(0xFF163D8B)],
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF78AFFF),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: const Text(
-                    'startup em destaque',
-                    style: TextStyle(
-                      color: Color(0xFF0D244A),
-                      fontSize: 11,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x66163D8B),
+                      blurRadius: 20,
+                      spreadRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    featured.name.characters.first.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 38,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                Text(
-                  featured.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 25,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  featured.sector ?? featured.stage,
-                  style: const TextStyle(
-                    color: Color(0xFFD2E4FF),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton(
-                  onPressed: null,
-                  style: OutlinedButton.styleFrom(
-                    disabledForegroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white70),
-                    minimumSize: const Size(112, 42),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text('Confira', style: TextStyle(fontSize: 13)),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const RadialGradient(
-                colors: [Color(0xFF4C96EC), Color(0xFF163D8B)],
               ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x66163D8B),
-                  blurRadius: 20,
-                  spreadRadius: 4,
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                featured.name.characters.first.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 38,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -279,91 +296,98 @@ class _HomePageState extends State<HomePage> {
         ? startup.sector!
         : startup.stage;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121212),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openStartupDetails(startup),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF32353E)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        child: Ink(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF121212),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFF32353E)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF204D96),
-                  border: Border.all(color: const Color(0xFF5E9CFF)),
-                ),
-                child: Center(
-                  child: Text(
-                    startup.name.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF204D96),
+                      border: Border.all(color: const Color(0xFF5E9CFF)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        startup.name.characters.first.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
+                  const Spacer(),
+                  Icon(
+                    startup.dailyVariation >= 0
+                        ? Icons.trending_up_rounded
+                        : Icons.trending_down_rounded,
+                    color: _variationColor(startup.dailyVariation),
+                    size: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _formatPercent(startup.dailyVariation),
+                style: TextStyle(
+                  color: _variationColor(startup.dailyVariation),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+              const SizedBox(height: 10),
+              Text(
+                startup.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                sectorLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
+              ),
               const Spacer(),
-              Icon(
-                startup.dailyVariation >= 0
-                    ? Icons.trending_up_rounded
-                    : Icons.trending_down_rounded,
-                color: _variationColor(startup.dailyVariation),
-                size: 20,
+              Text(
+                _formatCurrency(startup.currentPrice),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Capital captado: ${_formatCurrency(startup.capitalRaised)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFF9398A6), fontSize: 11),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            _formatPercent(startup.dailyVariation),
-            style: TextStyle(
-              color: _variationColor(startup.dailyVariation),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            startup.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            sectorLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
-          ),
-          const Spacer(),
-          Text(
-            _formatCurrency(startup.currentPrice),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Capital captado: ${_formatCurrency(startup.capitalRaised)}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Color(0xFF9398A6), fontSize: 11),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -400,83 +424,90 @@ class _HomePageState extends State<HomePage> {
               ? startup.sector!
               : startup.stage;
 
-          return Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFF121212),
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _openStartupDetails(startup),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF32353E)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF204D96),
-                  ),
-                  child: Center(
-                    child: Text(
-                      startup.name.characters.first.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+              child: Ink(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF121212),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFF32353E)),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        startup.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        sectorLabel,
-                        style: const TextStyle(
-                          color: Color(0xFFB7BCC8),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Row(
                   children: [
-                    Text(
-                      _formatCurrency(startup.currentPrice),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF204D96),
+                      ),
+                      child: Center(
+                        child: Text(
+                          startup.name.characters.first.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _formatPercent(startup.dailyVariation),
-                      style: TextStyle(
-                        color: _variationColor(startup.dailyVariation),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            startup.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            sectorLabel,
+                            style: const TextStyle(
+                              color: Color(0xFFB7BCC8),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          _formatCurrency(startup.currentPrice),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatPercent(startup.dailyVariation),
+                          style: TextStyle(
+                            color: _variationColor(startup.dailyVariation),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           );
         },

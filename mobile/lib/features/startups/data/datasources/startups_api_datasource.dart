@@ -1,5 +1,6 @@
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
+import '../models/startup_detail_model.dart';
 import '../models/startup_model.dart';
 
 class StartupsApiDataSource {
@@ -14,5 +15,12 @@ class StartupsApiDataSource {
     return data
         .map((item) => StartupModel.fromJson(item as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<StartupDetailModel> fetchStartupDetail(String startupId) async {
+    final response = await _apiClient.get(
+      '${ApiConstants.startups}/$startupId',
+    );
+    return StartupDetailModel.fromJson(response);
   }
 }
