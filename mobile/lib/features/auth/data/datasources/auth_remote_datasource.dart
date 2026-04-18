@@ -3,8 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthRemoteDataSource {
   final FirebaseAuth _firebaseAuth;
 
+  static const String _continueUrl = 'https://mesclainvest-dev.firebaseapp.com';
+  static const String _androidPackageName = 'com.example.mobile';
+  static const String _iosBundleId = 'com.example.mobile';
+
   AuthRemoteDataSource({FirebaseAuth? firebaseAuth})
-    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
+    _firebaseAuth.setLanguageCode('pt-BR');
+  }
 
   Future<UserCredential> signIn({
     required String email,
@@ -50,6 +56,15 @@ class AuthRemoteDataSource {
   }
 
   Future<void> sendPasswordResetEmail({required String email}) {
-    return _firebaseAuth.sendPasswordResetEmail(email: email);
+    return _firebaseAuth.sendPasswordResetEmail(
+      email: email,
+      actionCodeSettings: ActionCodeSettings(
+        url: _continueUrl,
+        handleCodeInApp: false,
+        androidPackageName: _androidPackageName,
+        androidInstallApp: true,
+        iOSBundleId: _iosBundleId,
+      ),
+    );
   }
 }

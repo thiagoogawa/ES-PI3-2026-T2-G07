@@ -18,6 +18,7 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   late final AuthController controller;
   late final TextEditingController emailController;
+  bool emailSent = false;
 
   @override
   void initState() {
@@ -60,12 +61,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     }
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enviamos um link de redefinicao para o seu e-mail.'),
-        ),
-      );
-      Navigator.of(context).pop();
+      setState(() {
+        emailSent = true;
+      });
       return;
     }
 
@@ -111,6 +109,26 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   ),
                 ),
                 const SizedBox(height: 28),
+                if (emailSent) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162338),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFF2D5CA8)),
+                    ),
+                    child: const Text(
+                      'Se existir uma conta para este e-mail, o Firebase enviara uma mensagem de redefinicao. Verifique tambem a caixa de spam.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -157,9 +175,31 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Enviar link de redefinicao'),
+                        : Text(
+                            emailSent
+                                ? 'Reenviar link de redefinicao'
+                                : 'Enviar link de redefinicao',
+                          ),
                   ),
                 ),
+                if (emailSent) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white38),
+                        minimumSize: const Size.fromHeight(48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Voltar ao login'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
