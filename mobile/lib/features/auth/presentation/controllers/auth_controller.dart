@@ -64,13 +64,22 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({
+    required String fullName,
+    required String cpf,
+    required String phone,
+    required String email,
+    required String password,
+  }) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
       currentUser = await _authRepository.signUp(
+        fullName: fullName,
+        cpf: cpf,
+        phone: phone,
         email: email,
         password: password,
       );
@@ -86,5 +95,22 @@ class AuthController extends ChangeNotifier {
     await _authRepository.signOut();
     currentUser = null;
     notifyListeners();
+  }
+
+  Future<bool> sendPasswordResetEmail({required String email}) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.sendPasswordResetEmail(email: email);
+      return true;
+    } catch (error) {
+      errorMessage = mapAuthException(error);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

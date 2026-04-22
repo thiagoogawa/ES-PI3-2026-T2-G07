@@ -22,4 +22,22 @@ export class AuthController {
       .status(HTTP_STATUS.OK)
       .json(successResponse(user, "Authenticated user fetched successfully"));
   }
+
+  static async updateProfile(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const user = await AuthService.updateProfile(
+      request.user,
+      request.body as Record<string, unknown>,
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(user, "Authenticated user updated successfully"));
+  }
 }

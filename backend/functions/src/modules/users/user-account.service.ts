@@ -264,3 +264,25 @@ export const syncBasicUserProfile = async (
     {merge: true},
   );
 };
+
+interface UpdateUserProfileInput {
+  name: string;
+  cpf: string;
+  phone: string;
+}
+
+export const updateUserProfile = async (
+  uid: string,
+  input: UpdateUserProfileInput,
+): Promise<void> => {
+  await getUserDocRef(uid).set(
+    {
+      uid,
+      nome: input.name,
+      cpf: input.cpf,
+      telefone: input.phone,
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true},
+  );
+};

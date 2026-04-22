@@ -5,6 +5,7 @@ class ApiConstants {
   );
 
   static const String authMe = '$baseUrl/v1/auth/me';
+  static const String authProfile = '$baseUrl/v1/auth/profile';
   static const String startups = '$baseUrl/v1/startups';
   static const String offers = '$baseUrl/v1/offers';
   static const String portfolio = '$baseUrl/v1/portfolio';

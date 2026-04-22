@@ -9,9 +9,14 @@ abstract class AuthRepository {
   });
 
   Future<AuthenticatedUser> signUp({
+    required String fullName,
+    required String cpf,
+    required String phone,
     required String email,
     required String password,
   });
+
+  Future<void> sendPasswordResetEmail({required String email});
 
   Future<void> signOut();
 }
