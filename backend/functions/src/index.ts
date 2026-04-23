@@ -16,6 +16,8 @@ import {
 
 setGlobalOptions({maxInstances: 10});
 
+export const api = onRequest(createApp());
+
 export const health = onRequest(createApp((router) => {
   router.get("/", (_request, response) => {
     response.status(HTTP_STATUS.OK).json({

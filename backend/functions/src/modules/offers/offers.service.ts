@@ -199,6 +199,14 @@ const updateSellerPosition = (
   return nextPortfolio;
 };
 
+const getStartupAvailableTokens = (source: Record<string, unknown>): number => {
+  return readNumber(
+    source,
+    ["tokensDisponiveis", "availableTokens", "liquidityTokens"],
+    0,
+  );
+};
+
 export class OffersService {
   static async list(filters: OfferFilters) {
     const normalizedType = filters.type ?
@@ -400,6 +408,20 @@ export class OffersService {
       }
     }
 
+    if (type === "compra" && remainingQuantity > 0) {
+      const startupMatch = await OffersService.executePrimaryPurchase(
+        decodedToken,
+        normalizedStartupId,
+        remainingQuantity,
+        pricePerToken,
+      );
+
+      if (startupMatch) {
+        executedMatches.push(startupMatch);
+        remainingQuantity -= startupMatch.quantity as number;
+      }
+    }
+
     const residualOffer = remainingQuantity > 0 ?
       await OffersService.create(decodedToken, {
         startupId: normalizedStartupId,
@@ -425,6 +447,137 @@ export class OffersService {
       matches: executedMatches,
       residualOffer,
     };
+  }
+
+  private static async executePrimaryPurchase(
+    decodedToken: DecodedIdToken,
+    startupId: string,
+    requestedQuantity: number,
+    pricePerToken: number,
+  ) {
+    return adminDb.runTransaction(async (transaction) => {
+      const userRef = getUserDocRef(decodedToken.uid);
+      const startupRef = startupsCollection.doc(startupId);
+
+      const [userSnapshot, startupSnapshot, investmentsSnapshot] =
+        await Promise.all([
+          transaction.get(userRef),
+          transaction.get(startupRef),
+          transaction.get(getUserInvestmentsCollectionRef(decodedToken.uid)),
+        ]);
+
+      if (!startupSnapshot.exists) {
+        throw new AppError(
+          "Startup not found",
+          HTTP_STATUS.NOT_FOUND,
+          "STARTUP_NOT_FOUND",
+        );
+      }
+
+      if (!userSnapshot.exists) {
+        throw new AppError(
+          "User account not initialized",
+          HTTP_STATUS.CONFLICT,
+          "USER_ACCOUNT_NOT_INITIALIZED",
+        );
+      }
+
+      const investmentsFallback = Object.fromEntries(
+        investmentsSnapshot.docs.map((doc) => [doc.id, doc.data()]),
+      ) as unknown as Record<string, PortfolioPosition>;
+      const account = normalizeUserAccount(
+        decodedToken.uid,
+        userSnapshot.data() ?? {},
+        {portfolio: investmentsFallback},
+      );
+      const startupData = startupSnapshot.data() ?? {};
+      const availableTokens = getStartupAvailableTokens(startupData);
+
+      if (availableTokens <= 0) {
+        return null;
+      }
+
+      const matchedQuantity = Math.min(requestedQuantity, availableTokens);
+      const totalValue = matchedQuantity * pricePerToken;
+
+      if (account.balance < totalValue) {
+        throw new ValidationError("Buyer does not have enough balance");
+      }
+
+      const startupName =
+        readString(startupData, "nome", "name") ??
+        startupId;
+      const nextBuyerPortfolio = updateBuyerPosition(
+        account.portfolio,
+        startupId,
+        startupName,
+        matchedQuantity,
+        pricePerToken,
+      );
+      const transactionRef = transactionsCollection.doc();
+
+      transaction.update(userRef, {
+        saldoDisponivel: account.balance - totalValue,
+        carteira: nextBuyerPortfolio,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      syncInvestmentsInTransaction(
+        transaction,
+        decodedToken.uid,
+        account.portfolio,
+        nextBuyerPortfolio,
+      );
+
+      transaction.set(
+        startupRef,
+        {
+          tokensDisponiveis: availableTokens - matchedQuantity,
+          capitalAportado: readNumber(
+            startupData,
+            ["capitalAportado", "capitalRaised"],
+            0,
+          ) + totalValue,
+          valorTokenAtual: pricePerToken,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        {merge: true},
+      );
+
+      transaction.set(transactionRef, {
+        startupId,
+        buyerId: decodedToken.uid,
+        sellerId: `startup:${startupId}`,
+        quantidade: matchedQuantity,
+        precoUnitario: pricePerToken,
+        totalValue,
+        ofertaCompraId: null,
+        ofertaVendaId: null,
+        status: "executada",
+        origem: "emissao-primaria",
+        executadaEm: FieldValue.serverTimestamp(),
+      });
+
+      transaction.set(startupRef.collection("historicoPrecos").doc(), {
+        preco: pricePerToken,
+        timestamp: FieldValue.serverTimestamp(),
+        origem: "emissao-primaria",
+        transacaoId: transactionRef.id,
+      });
+
+      return {
+        offerId: null,
+        startupId,
+        startupName,
+        quantity: matchedQuantity,
+        pricePerToken,
+        totalValue,
+        status: availableTokens - matchedQuantity <= 0 ?
+          "matched" :
+          "partial",
+        remainingQuantity: Math.max(availableTokens - matchedQuantity, 0),
+        source: "primary",
+      };
+    });
   }
 
   static async accept(

@@ -124,6 +124,7 @@ export class DevService {
           estagio: "expansao",
           capitalAportado: 420000,
           totalTokens: 10000,
+          tokensDisponiveis: 2500,
           valorTokenAtual: 12,
           sumarioExecutivo:
             "Startup focada em previsao de demanda, precificacao " +
@@ -226,6 +227,7 @@ export class DevService {
           estagio: "operacao",
           capitalAportado: 260000,
           totalTokens: 8000,
+          tokensDisponiveis: 1800,
           valorTokenAtual: 16,
           sumarioExecutivo:
             "Solução SaaS+B2B para hospitais e operadoras com painel " +

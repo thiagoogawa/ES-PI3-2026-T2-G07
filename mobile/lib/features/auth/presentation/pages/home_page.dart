@@ -213,6 +213,14 @@ class _HomePageState extends State<HomePage> {
     return '${value >= 0 ? '+' : ''}${value.toStringAsFixed(2).replaceAll('.', ',')}%';
   }
 
+  String _formatQuantity(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+
+    return value.toStringAsFixed(2).replaceAll('.', ',');
+  }
+
   Color _variationColor(double value) {
     if (value < 0) {
       return const Color(0xFFFF7A8B);
@@ -415,6 +423,249 @@ class _HomePageState extends State<HomePage> {
 
         return _buildPortfolioSummary(snapshot.data!);
       },
+    );
+  }
+
+  Widget _buildPortfolioPositionCard(StartupPortfolioPositionModel position) {
+    final profitLossColor = _variationColor(position.profitLoss);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF121212),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF2A2E36)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  position.startupName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                _formatCurrency(position.currentValue),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _buildPortfolioMetricChip(
+                'Tokens',
+                _formatQuantity(position.quantity),
+              ),
+              _buildPortfolioMetricChip(
+                'Preco medio',
+                _formatCurrency(position.averagePrice),
+              ),
+              _buildPortfolioMetricChip(
+                'Preco atual',
+                _formatCurrency(position.currentPrice),
+              ),
+              _buildPortfolioMetricChip(
+                'Investido',
+                _formatCurrency(position.investedAmount),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Resultado: ${_formatCurrency(position.profitLoss)}',
+            style: TextStyle(
+              color: profitLossColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortfolioMetricChip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1C20),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF2E323A)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: Color(0xFF9398A6), fontSize: 11),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortfolioTab() {
+    return RefreshIndicator(
+      onRefresh: _reloadHomeData,
+      color: const Color(0xFF4E91F3),
+      child: FutureBuilder<StartupPortfolioSnapshotModel>(
+        future: _portfolioRequest(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 160),
+                Center(
+                  child: CircularProgressIndicator(color: Color(0xFF4E91F3)),
+                ),
+              ],
+            );
+          }
+
+          if (snapshot.hasError) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 28),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF151618),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2A2E36)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Nao foi possivel carregar o portfolio.',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        '${snapshot.error}',
+                        style: const TextStyle(
+                          color: Color(0xFFB7BCC8),
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton(
+                        onPressed: _reloadHomeData,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Color(0xFF4A4D56)),
+                        ),
+                        child: const Text('Tentar novamente'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+
+          final portfolio = snapshot.data!;
+
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 28),
+              _buildPortfolioSummary(portfolio),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF151618),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF2A2E36)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildProfileRow(
+                        'Saldo reservado',
+                        _formatCurrency(portfolio.reservedBalance),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildProfileRow(
+                        'Total investido',
+                        _formatCurrency(portfolio.totalInvested),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+              const Text(
+                'Posicoes',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (portfolio.positions.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF121212),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFF2A2E36)),
+                  ),
+                  child: const Text(
+                    'Voce ainda nao possui tokens em carteira. Compre uma startup para ver suas posicoes aqui.',
+                    style: TextStyle(
+                      color: Color(0xFFB7BCC8),
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              for (final position in portfolio.positions) ...[
+                _buildPortfolioPositionCard(position),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 24),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -642,41 +893,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPlaceholderTab({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        _buildHeader(),
-        const SizedBox(height: 48),
-        Icon(icon, size: 54, color: const Color(0xFF5D95F0)),
-        const SizedBox(height: 18),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          description,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFFB7BCC8),
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildProfileTab() {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -763,12 +979,7 @@ class _HomePageState extends State<HomePage> {
       case 2:
         return TradingPage(startups: startups);
       case 3:
-        return _buildPlaceholderTab(
-          icon: Icons.account_balance_wallet_outlined,
-          title: 'Portfolio',
-          description:
-              'Seu portfolio de tokens e o desempenho consolidado aparecerao nesta aba.',
-        );
+        return _buildPortfolioTab();
       case 4:
         return _buildProfileTab();
       default:
