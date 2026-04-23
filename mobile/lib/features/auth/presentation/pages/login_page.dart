@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF171717),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
         return AnimatedBuilder(
@@ -87,10 +87,10 @@ class _LoginPageState extends State<LoginPage> {
           builder: (context, _) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -100,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
                     'Entrar',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 28,
+                      fontSize: 24,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -109,10 +109,10 @@ class _LoginPageState extends State<LoginPage> {
                     'Acesse sua conta para continuar.',
                     style: const TextStyle(
                       color: Color(0xFFBDBDBD),
-                      fontSize: 15,
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -154,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -164,9 +164,9 @@ class _LoginPageState extends State<LoginPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3C78D8),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(58),
+                        minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       child: controller.isLoading
@@ -216,11 +216,11 @@ class _LoginPageState extends State<LoginPage> {
       filled: true,
       fillColor: const Color(0xFF242424),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFF323232)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFF3C78D8), width: 1.4),
       ),
     );
@@ -232,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
           child: Column(
             children: [
               const SizedBox(height: 8),
@@ -241,9 +241,9 @@ class _LoginPageState extends State<LoginPage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 38,
+                  fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -1.4,
+                  letterSpacing: -1.0,
                 ),
               ),
               const SizedBox(height: 8),
@@ -252,14 +252,14 @@ class _LoginPageState extends State<LoginPage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFFE8E8E8),
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.35,
                 ),
               ),
-              const SizedBox(height: 24),
-              const _MesclaBrandLogo(size: 168),
-              const SizedBox(height: 96),
+              const SizedBox(height: 20),
+              const _MesclaBrandLogo(size: 148),
+              const SizedBox(height: 72),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -269,12 +269,12 @@ class _LoginPageState extends State<LoginPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF346AC0),
                     foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(53),
+                    minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     textStyle: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -296,13 +296,13 @@ class _LoginPageState extends State<LoginPage> {
                         },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white70, width: 1.6),
-                    minimumSize: const Size.fromHeight(53),
+                    side: const BorderSide(color: Colors.white70, width: 1.2),
+                    minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     textStyle: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -329,13 +329,13 @@ class _MesclaBrandLogo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
             color: Color(0x33000000),
-            blurRadius: 18,
+            blurRadius: 12,
             spreadRadius: 1,
-            offset: Offset(0, 8),
+            offset: Offset(0, 6),
           ),
         ],
       ),

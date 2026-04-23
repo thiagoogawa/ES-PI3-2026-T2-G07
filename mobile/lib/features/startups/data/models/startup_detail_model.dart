@@ -10,6 +10,7 @@ class StartupDetailModel extends StartupDetail {
     required super.currentPrice,
     required super.capitalRaised,
     required super.dailyVariation,
+    required super.totalTokens,
     required super.executiveSummary,
     required super.businessPlanUrl,
     required super.pitchDeckUrl,
@@ -42,6 +43,10 @@ class StartupDetailModel extends StartupDetail {
       currentPrice: (data['currentPrice'] as num?)?.toDouble() ?? 0,
       capitalRaised: (data['capitalRaised'] as num?)?.toDouble() ?? 0,
       dailyVariation: (variation['diaria'] as num?)?.toDouble() ?? 0,
+      totalTokens:
+          (data['totalTokens'] as num?)?.toDouble() ??
+          (metrics['totalTokens'] as num?)?.toDouble() ??
+          0,
       executiveSummary:
           documents['executiveSummary'] as String? ??
           data['executiveSummary'] as String? ??

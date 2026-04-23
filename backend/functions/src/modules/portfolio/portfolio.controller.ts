@@ -37,4 +37,22 @@ export class PortfolioController {
       .status(HTTP_STATUS.OK)
       .json(successResponse(dashboard, "Dashboard fetched successfully"));
   }
+
+  static async simulateDeposit(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const portfolio = await PortfolioService.simulateDeposit(
+      request.user,
+      request.body,
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(portfolio, "Simulated deposit completed"));
+  }
 }
