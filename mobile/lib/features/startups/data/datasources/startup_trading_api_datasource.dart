@@ -62,6 +62,13 @@ class StartupTradingApiDataSource {
     return StartupTradeResultModel.fromJson(response);
   }
 
+  Future<void> cancelOffer(String idToken, {required String offerId}) async {
+    await _apiClient.post(
+      ApiConstants.offerCancel(offerId),
+      headers: _authHeaders(idToken),
+    );
+  }
+
   Future<StartupTradeMatchModel> acceptOffer(
     String idToken, {
     required String offerId,

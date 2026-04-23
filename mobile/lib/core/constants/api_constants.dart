@@ -18,4 +18,5 @@ class ApiConstants {
   static String startupTrade(String startupId) => '$startups/$startupId/trade';
 
   static String offerAccept(String offerId) => '$offers/$offerId/accept';
+  static String offerCancel(String offerId) => '$offers/$offerId/cancel';
 }

@@ -45,4 +45,19 @@ export class OffersController {
       .status(HTTP_STATUS.OK)
       .json(successResponse(transaction, "Offer accepted successfully"));
   }
+
+  static async cancel(request: Request, response: Response): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const offer = await OffersService.cancel(
+      request.user,
+      request.params.offerId,
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(offer, "Offer cancelled successfully"));
+  }
 }
