@@ -11,4 +11,8 @@ class ApiConstants {
   static const String portfolio = '$baseUrl/v1/portfolio';
   static const String dashboard = '$baseUrl/v1/portfolio/dashboard';
   static const String transactions = '$baseUrl/v1/transactions';
+
+  static String startupTrade(String startupId) => '$startups/$startupId/trade';
+
+  static String offerAccept(String offerId) => '$offers/$offerId/accept';
 }

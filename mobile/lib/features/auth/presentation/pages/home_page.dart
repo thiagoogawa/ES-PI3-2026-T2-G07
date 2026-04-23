@@ -5,6 +5,7 @@ import '../../domain/entities/authenticated_user.dart';
 import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/domain/entities/startup.dart';
 import '../../../startups/presentation/pages/startup_detail_page.dart';
+import '../../../startups/presentation/pages/trading_page.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -634,12 +635,7 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return _buildExploreTab(startups);
       case 2:
-        return _buildPlaceholderTab(
-          icon: Icons.candlestick_chart_rounded,
-          title: 'Negociar',
-          description:
-              'Aqui voce podera acompanhar ofertas e executar operacoes com os tokens das startups.',
-        );
+        return TradingPage(startups: startups);
       case 3:
         return _buildPlaceholderTab(
           icon: Icons.account_balance_wallet_outlined,

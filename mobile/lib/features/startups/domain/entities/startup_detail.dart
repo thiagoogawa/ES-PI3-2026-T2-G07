@@ -51,6 +51,7 @@ class StartupPricePoint {
 }
 
 class StartupDetail extends Startup {
+  final double totalTokens;
   final String executiveSummary;
   final String? businessPlanUrl;
   final String? pitchDeckUrl;
@@ -72,6 +73,7 @@ class StartupDetail extends Startup {
     required super.currentPrice,
     required super.capitalRaised,
     required super.dailyVariation,
+    required this.totalTokens,
     required this.executiveSummary,
     required this.businessPlanUrl,
     required this.pitchDeckUrl,

@@ -1,6 +1,8 @@
 import {Request, Response} from "express";
+import {AuthError} from "../../core/errors/auth-error";
 import {HTTP_STATUS} from "../../core/http/http-status";
 import {successResponse} from "../../core/http/success-response";
+import {OffersService} from "../offers/offers.service";
 import {StartupsService} from "./startups.service";
 
 export class StartupsController {
@@ -21,5 +23,21 @@ export class StartupsController {
     response
       .status(HTTP_STATUS.OK)
       .json(successResponse(startup, "Startup fetched successfully"));
+  }
+
+  static async trade(request: Request, response: Response): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const trade = await OffersService.submitTrade(
+      request.user,
+      request.params.startupId,
+      request.body,
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(trade, "Trade executed successfully"));
   }
 }

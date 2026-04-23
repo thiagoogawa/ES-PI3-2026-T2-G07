@@ -32,6 +32,12 @@ interface AcceptOfferInput {
   quantity?: unknown;
 }
 
+interface SubmitTradeInput {
+  type?: string;
+  quantity?: unknown;
+  pricePerToken?: unknown;
+}
+
 interface OfferFilters {
   startupId?: string;
   type?: string;
@@ -290,6 +296,135 @@ export class OffersService {
 
       return normalizeOffer(offerRef.id, payload);
     });
+  }
+
+  static async submitTrade(
+    decodedToken: DecodedIdToken,
+    startupId: string,
+    input: SubmitTradeInput,
+  ) {
+    const normalizedStartupId = startupId.trim();
+    if (!normalizedStartupId) {
+      throw new ValidationError("startupId is required");
+    }
+
+    const type = toStoredOfferType(input.type);
+    const quantity = parsePositiveNumber(input.quantity, "quantity");
+    const startupSnapshot = await startupsCollection
+      .doc(normalizedStartupId)
+      .get();
+
+    if (!startupSnapshot.exists) {
+      throw new AppError(
+        "Startup not found",
+        HTTP_STATUS.NOT_FOUND,
+        "STARTUP_NOT_FOUND",
+      );
+    }
+
+    const startupData = startupSnapshot.data() ?? {};
+    const startupPrice = readNumber(
+      startupData,
+      [
+        "valorTokenAtual",
+        "precoAtual",
+        "currentPrice",
+        "tokenPrice",
+        "valorToken",
+      ],
+      0,
+    );
+    const pricePerToken = input.pricePerToken === undefined ?
+      startupPrice :
+      parsePositiveNumber(input.pricePerToken, "pricePerToken");
+
+    if (pricePerToken <= 0) {
+      throw new ValidationError(
+        "pricePerToken is required when the startup does not have " +
+          "a current token price",
+      );
+    }
+
+    const oppositeType = type === "compra" ? "sell" : "buy";
+    const candidateOffers = (await OffersService.list({
+      startupId: normalizedStartupId,
+      type: oppositeType,
+    }))
+      .filter((offer) => offer.status === "open" || offer.status === "partial")
+      .filter((offer) => {
+        return type === "compra" ?
+          offer.pricePerToken <= pricePerToken :
+          offer.pricePerToken >= pricePerToken;
+      })
+      .sort((left, right) => {
+        if (left.pricePerToken !== right.pricePerToken) {
+          return type === "compra" ?
+            left.pricePerToken - right.pricePerToken :
+            right.pricePerToken - left.pricePerToken;
+        }
+
+        return (left.createdAt ?? "").localeCompare(right.createdAt ?? "");
+      });
+
+    let remainingQuantity = quantity;
+    const executedMatches = [] as Array<Record<string, unknown>>;
+
+    for (const offer of candidateOffers) {
+      if (remainingQuantity <= 0) {
+        break;
+      }
+
+      const matchedQuantity = Math.min(
+        remainingQuantity,
+        offer.remainingQuantity,
+      );
+
+      try {
+        const match = await OffersService.accept(decodedToken, offer.id, {
+          quantity: matchedQuantity,
+        });
+        executedMatches.push(match as Record<string, unknown>);
+        remainingQuantity -= matchedQuantity;
+      } catch (error) {
+        if (
+          error instanceof ValidationError &&
+          (
+            error.message === "Offer is no longer available" ||
+            error.message === "Requested quantity exceeds offer balance"
+          )
+        ) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    const residualOffer = remainingQuantity > 0 ?
+      await OffersService.create(decodedToken, {
+        startupId: normalizedStartupId,
+        type,
+        quantity: remainingQuantity,
+        pricePerToken,
+      }) :
+      null;
+
+    return {
+      startupId: normalizedStartupId,
+      type: toInternalOfferType(type),
+      quantity,
+      pricePerToken,
+      matchedQuantity: quantity - remainingQuantity,
+      remainingQuantity,
+      status:
+        remainingQuantity <= 0 ?
+          "executed" :
+          executedMatches.length > 0 ?
+            "partial" :
+            "open",
+      matches: executedMatches,
+      residualOffer,
+    };
   }
 
   static async accept(

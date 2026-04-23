@@ -36,6 +36,7 @@ A plataforma simula a negociação de tokens representativos de startups, permit
 - Balcão de compra/venda de tokens (simulado)
 - Carteira digital com saldo fictício em reais
 - Ofertas de compra/venda entre usuários cadastrados
+- Compra e venda diretamente na página da startup, com matching automático no book
 
 ### Dashboard de Investimentos
 
@@ -47,6 +48,81 @@ A plataforma simula a negociação de tokens representativos de startups, permit
 
 - Envio de perguntas públicas/privadas aos empreendedores
 - Feed de atualizações e eventos das startups
+
+---
+
+## 🔁 Fluxo De Compra E Venda
+
+O fluxo de negociação segue o PDF do projeto:
+
+- Compra e venda simuladas de tokens dentro do app
+- Execução direta na página da startup
+- Balcão com ofertas abertas de compra e venda
+- Atualização de saldo, carteira, transações e histórico de preço a cada execução
+
+### Functions HTTP usadas pelo mobile
+
+- `GET /v1/startups/:startupId`: detalhes da startup, preço atual e histórico
+- `GET /v1/offers?startupId=:startupId`: book de ofertas da startup
+- `GET /v1/portfolio`: saldo fictício, saldo reservado e posição do investidor
+- `POST /v1/startups/:startupId/trade`: envia ordem direta de compra/venda e faz matching automático
+- `POST /v1/offers/:offerId/accept`: aceita uma oferta aberta do book
+
+### Comportamento do endpoint de trade direto
+
+O endpoint `POST /v1/startups/:startupId/trade`:
+
+- recebe `type`, `quantity` e `pricePerToken`
+- procura ofertas opostas compatíveis no book da startup
+- executa os matches possíveis pelo melhor preço disponível
+- deixa a quantidade restante como oferta aberta, quando houver sobra
+
+---
+
+## ⚙️ Backend E Deploy
+
+O backend de Cloud Functions está em [backend/functions](/Users/thiagoogawa/Documents/PUC%204%20semestre/PII%203%20-%20Mobile/ES-PI3-2026-T2-G07/backend/functions) e usa Firestore nomeado `mescla-inv`.
+
+### Rodar localmente
+
+No diretório [backend](/Users/thiagoogawa/Documents/PUC%204%20semestre/PII%203%20-%20Mobile/ES-PI3-2026-T2-G07/backend):
+
+```bash
+FIRESTORE_DATABASE_ID=mescla-inv npm --prefix functions run serve
+```
+
+Isso sobe o emulador das functions com build e lint configurados no `firebase.json`.
+
+### Deploy das functions
+
+No diretório [backend](/Users/thiagoogawa/Documents/PUC%204%20semestre/PII%203%20-%20Mobile/ES-PI3-2026-T2-G07/backend):
+
+```bash
+npm --prefix functions run deploy -- --project <firebase-project-id>
+```
+
+Se quiser validar antes do deploy:
+
+```bash
+npm --prefix functions run lint
+npm --prefix functions run build
+```
+
+### Base URL do mobile
+
+Ambiente local:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:5001/<firebase-project-id>/us-central1/api
+```
+
+Em dispositivo Android usando o emulador, ajuste o host para `10.0.2.2` se necessário.
+
+Ambiente deployado:
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://us-central1-<firebase-project-id>.cloudfunctions.net/api
+```
 
 ---
 
