@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/authenticated_user.dart';
+import '../../data/datasources/auth_remote_datasource.dart';
 import '../../../startups/data/datasources/startups_api_datasource.dart';
+import '../../../startups/data/datasources/startup_trading_api_datasource.dart';
+import '../../../startups/data/models/startup_portfolio_snapshot_model.dart';
 import '../../../startups/domain/entities/startup.dart';
 import '../../../startups/presentation/pages/startup_detail_page.dart';
 import '../../../startups/presentation/pages/trading_page.dart';
@@ -19,14 +22,38 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final StartupsApiDataSource _startupsApiDataSource;
+  StartupTradingApiDataSource? _startupTradingApiDataSource;
+  AuthRemoteDataSource? _authRemoteDataSource;
   late Future<List<Startup>> _startupsFuture;
+  Future<StartupPortfolioSnapshotModel>? _portfolioFuture;
   int _selectedIndex = 0;
+  bool _isDepositing = false;
 
   @override
   void initState() {
     super.initState();
     _startupsApiDataSource = StartupsApiDataSource(ApiClient());
     _startupsFuture = _startupsApiDataSource.fetchStartups();
+    _portfolioFuture = _fetchPortfolio();
+  }
+
+  StartupTradingApiDataSource get _tradingApi {
+    return _startupTradingApiDataSource ??= StartupTradingApiDataSource(
+      ApiClient(),
+    );
+  }
+
+  AuthRemoteDataSource get _authRemote {
+    return _authRemoteDataSource ??= AuthRemoteDataSource();
+  }
+
+  Future<StartupPortfolioSnapshotModel> _fetchPortfolio() async {
+    final idToken = await _authRemote.getIdToken();
+    return _tradingApi.fetchPortfolio(idToken);
+  }
+
+  Future<StartupPortfolioSnapshotModel> _portfolioRequest() {
+    return _portfolioFuture ??= _fetchPortfolio();
   }
 
   Future<void> _reloadStartups() async {
@@ -39,6 +66,79 @@ class _HomePageState extends State<HomePage> {
     }
 
     await future;
+  }
+
+  Future<void> _reloadHomeData() async {
+    final startupsFuture = _startupsApiDataSource.fetchStartups();
+    final portfolioFuture = _fetchPortfolio();
+
+    if (mounted) {
+      setState(() {
+        _startupsFuture = startupsFuture;
+        _portfolioFuture = portfolioFuture;
+      });
+    }
+
+    await Future.wait([startupsFuture, portfolioFuture]);
+  }
+
+  Future<double?> _openDepositSheet() async {
+    return Navigator.of(context).push<double>(
+      MaterialPageRoute(builder: (_) => const _DepositAmountPage()),
+    );
+  }
+
+  Future<void> _simulateDeposit() async {
+    if (_isDepositing) {
+      return;
+    }
+
+    final amount = await _openDepositSheet();
+    if (amount == null) {
+      return;
+    }
+
+    setState(() {
+      _isDepositing = true;
+    });
+
+    try {
+      final idToken = await _authRemote.getIdToken();
+      final portfolio = await _tradingApi.simulateDeposit(
+        idToken,
+        amount: amount,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _portfolioFuture = Future.value(portfolio);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Saldo ficticio adicionado: ${_formatCurrency(amount)}.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDepositing = false;
+        });
+      }
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -121,6 +221,12 @@ class _HomePageState extends State<HomePage> {
     return const Color(0xFF84B5FF);
   }
 
+  double _portfolioWealth(StartupPortfolioSnapshotModel portfolio) {
+    return portfolio.balance +
+        portfolio.reservedBalance +
+        portfolio.currentValue;
+  }
+
   void _onDestinationSelected(int index) {
     setState(() {
       _selectedIndex = index;
@@ -137,32 +243,32 @@ class _HomePageState extends State<HomePage> {
     return Row(
       children: [
         CircleAvatar(
-          radius: 24,
+          radius: 22,
           backgroundColor: const Color(0xFF4E5A74),
           child: Text(
             _initials(),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 '${_greeting()},',
-                style: const TextStyle(color: Color(0xFFCACDD7), fontSize: 14),
+                style: const TextStyle(color: Color(0xFFCACDD7), fontSize: 13),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 _displayName(),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -178,117 +284,137 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHeroBanner(List<Startup> startups) {
-    final featured = startups.first;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _openStartupDetails(featured),
-        borderRadius: BorderRadius.circular(26),
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF102853), Color(0xFF1C5DC3)],
+  Widget _buildPortfolioSummary(StartupPortfolioSnapshotModel portfolio) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111214),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF21242B)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Patrimonio',
+            style: TextStyle(
+              color: Color(0xFFB7BCC8),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF78AFFF),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Text(
-                        'startup em destaque',
-                        style: TextStyle(
-                          color: Color(0xFF0D244A),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      featured.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 25,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      featured.sector ?? featured.stage,
-                      style: const TextStyle(
-                        color: Color(0xFFD2E4FF),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton(
-                      onPressed: () => _openStartupDetails(featured),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white70),
-                        minimumSize: const Size(112, 42),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Confira',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const RadialGradient(
-                    colors: [Color(0xFF4C96EC), Color(0xFF163D8B)],
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x66163D8B),
-                      blurRadius: 20,
-                      spreadRadius: 4,
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    featured.name.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 38,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 10),
+          Text(
+            _formatCurrency(_portfolioWealth(portfolio)),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
+          const SizedBox(height: 12),
+          Text(
+            'Disponivel para investir: ${_formatCurrency(portfolio.balance)}',
+            style: const TextStyle(color: Color(0xFFD2D6DE), fontSize: 15),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isDepositing ? null : _simulateDeposit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1B1D22),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFF1B1D22),
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: _isDepositing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.arrow_downward_rounded),
+              label: Text(
+                _isDepositing ? 'Depositando...' : 'Depositar',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildPortfolioSummarySection() {
+    return FutureBuilder<StartupPortfolioSnapshotModel>(
+      future: _portfolioRequest(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF111214),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF21242B)),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(color: Color(0xFF4E91F3)),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF111214),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF21242B)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Nao foi possivel carregar o patrimonio.',
+                  style: TextStyle(color: Colors.white, fontSize: 15),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${snapshot.error}',
+                  style: const TextStyle(
+                    color: Color(0xFFB7BCC8),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  onPressed: _reloadHomeData,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF4A4D56)),
+                  ),
+                  child: const Text('Tentar novamente'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return _buildPortfolioSummary(snapshot.data!);
+      },
     );
   }
 
@@ -301,12 +427,12 @@ class _HomePageState extends State<HomePage> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _openStartupDetails(startup),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         child: Ink(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: const Color(0xFF121212),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFF32353E)),
           ),
           child: Column(
@@ -315,8 +441,8 @@ class _HomePageState extends State<HomePage> {
               Row(
                 children: [
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0xFF204D96),
@@ -327,7 +453,7 @@ class _HomePageState extends State<HomePage> {
                         startup.name.characters.first.toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 19,
+                          fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -348,18 +474,18 @@ class _HomePageState extends State<HomePage> {
                 _formatPercent(startup.dailyVariation),
                 style: TextStyle(
                   color: _variationColor(startup.dailyVariation),
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 startup.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -368,14 +494,14 @@ class _HomePageState extends State<HomePage> {
                 sectorLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
+                style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 12),
               ),
               const Spacer(),
               Text(
                 _formatCurrency(startup.currentPrice),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -384,7 +510,7 @@ class _HomePageState extends State<HomePage> {
                 'Capital captado: ${_formatCurrency(startup.capitalRaised)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF9398A6), fontSize: 11),
+                style: const TextStyle(color: Color(0xFF9398A6), fontSize: 10),
               ),
             ],
           ),
@@ -667,32 +793,32 @@ class _HomePageState extends State<HomePage> {
     }
 
     return RefreshIndicator(
-      onRefresh: _reloadStartups,
+      onRefresh: _reloadHomeData,
       color: const Color(0xFF4E91F3),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(child: _buildHeader()),
-          const SliverToBoxAdapter(child: SizedBox(height: 28)),
-          SliverToBoxAdapter(child: _buildHeroBanner(startups)),
-          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+          const SliverToBoxAdapter(child: SizedBox(height: 22)),
+          SliverToBoxAdapter(child: _buildPortfolioSummarySection()),
+          const SliverToBoxAdapter(child: SizedBox(height: 22)),
           const SliverToBoxAdapter(
             child: Text(
               'Acompanhe as Startups',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 17,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 18)),
+          const SliverToBoxAdapter(child: SizedBox(height: 14)),
           SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.74,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.8,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) => _buildStartupCard(startups[index]),
@@ -712,7 +838,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onDestinationSelected,
-        height: 74,
+        height: 68,
         backgroundColor: const Color(0xFF1A1B1E),
         indicatorColor: const Color(0xFF264E90),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -746,7 +872,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
           child: FutureBuilder<List<Startup>>(
             future: _startupsFuture,
             builder: (context, snapshot) {
@@ -788,6 +914,114 @@ class _HomePageState extends State<HomePage> {
 
               return _buildSelectedBody(snapshot.data ?? const []);
             },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DepositAmountPage extends StatefulWidget {
+  const _DepositAmountPage();
+
+  @override
+  State<_DepositAmountPage> createState() => _DepositAmountPageState();
+}
+
+class _DepositAmountPageState extends State<_DepositAmountPage> {
+  late final TextEditingController _amountController;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final normalized = _amountController.text
+        .trim()
+        .replaceAll('.', '')
+        .replaceAll(',', '.');
+    final amount = double.tryParse(normalized);
+
+    if (amount == null || amount <= 0) {
+      setState(() {
+        _errorText = 'Informe um valor valido.';
+      });
+      return;
+    }
+
+    Navigator.of(context).pop(amount);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F0F10),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0F0F10),
+        foregroundColor: Colors.white,
+        title: const Text('Depositar saldo'),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: const Color(0xFF17191D),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF292D34)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Depositar saldo ficticio',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Informe o valor que deseja adicionar ao saldo.',
+                  style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _amountController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  autofocus: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Valor do deposito',
+                    hintText: 'Ex.: 10000',
+                    errorText: _errorText,
+                  ),
+                  onSubmitted: (_) => _submit(),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _submit,
+                    child: const Text('Confirmar deposito'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

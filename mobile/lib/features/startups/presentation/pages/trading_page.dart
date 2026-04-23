@@ -26,8 +26,6 @@ class _TradingPageState extends State<TradingPage> {
   String? _busyOfferId;
   String _searchQuery = '';
   String _selectedStage = 'all';
-  bool _showMarket = true;
-  bool _showGrid = true;
 
   @override
   void initState() {
@@ -169,10 +167,10 @@ class _TradingPageState extends State<TradingPage> {
 
   Widget _buildMetricCard(String label, String value) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF151618),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFF2E323A)),
       ),
       child: Column(
@@ -180,56 +178,15 @@ class _TradingPageState extends State<TradingPage> {
         children: [
           Text(
             label,
-            style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 12),
+            style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 11),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             value,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopInsightCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color accentColor,
-  }) {
-    return Container(
-      width: 168,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B1D22),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2B3038)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: accentColor, size: 28),
-          const Spacer(),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 12,
-              height: 1.35,
             ),
           ),
         ],
@@ -238,16 +195,16 @@ class _TradingPageState extends State<TradingPage> {
   }
 
   Future<void> _openFilterSheet() async {
+    final stages = _availableStages();
     final chosenStage = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF141517),
+      backgroundColor: const Color(0xFF111318),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        final stages = _availableStages();
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +213,7 @@ class _TradingPageState extends State<TradingPage> {
                 'Filtrar startups',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -313,7 +270,7 @@ class _TradingPageState extends State<TradingPage> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF141517),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         final quantityController = TextEditingController(text: '1');
@@ -327,7 +284,7 @@ class _TradingPageState extends State<TradingPage> {
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
             return Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+              padding: EdgeInsets.fromLTRB(18, 18, 18, bottomInset + 18),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -337,7 +294,7 @@ class _TradingPageState extends State<TradingPage> {
                       type == 'buy' ? 'Comprar tokens' : 'Vender tokens',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -349,7 +306,7 @@ class _TradingPageState extends State<TradingPage> {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: quantityController,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -418,7 +375,7 @@ class _TradingPageState extends State<TradingPage> {
                               ? const Color(0xFF2E7DFF)
                               : const Color(0xFFFF7A8B),
                           foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(52),
+                          minimumSize: const Size.fromHeight(46),
                         ),
                         child: Text(
                           type == 'buy' ? 'Enviar compra' : 'Enviar venda',
@@ -592,7 +549,7 @@ class _TradingPageState extends State<TradingPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF151618),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFF2E323A)),
       ),
       child: Column(
@@ -617,7 +574,7 @@ class _TradingPageState extends State<TradingPage> {
                     color: offer.type == 'buy'
                         ? const Color(0xFF84B5FF)
                         : const Color(0xFFFFA7B2),
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -625,7 +582,7 @@ class _TradingPageState extends State<TradingPage> {
               const Spacer(),
               Text(
                 _formatDate(offer.createdAt),
-                style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 12),
+                style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 11),
               ),
             ],
           ),
@@ -650,12 +607,12 @@ class _TradingPageState extends State<TradingPage> {
           const SizedBox(height: 12),
           Text(
             'Investidor: ${offer.userName ?? 'Nao informado'}',
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
           const SizedBox(height: 6),
           Text(
             'Valor total: ${_formatCurrency(offer.totalValue)}',
-            style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
+            style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 12),
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -683,12 +640,12 @@ class _TradingPageState extends State<TradingPage> {
 
     return InkWell(
       onTap: () => _selectStartup(startup),
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF20242D) : const Color(0xFF141517),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF3B82F6)
@@ -701,8 +658,8 @@ class _TradingPageState extends State<TradingPage> {
             Row(
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFF2A3340),
@@ -712,7 +669,7 @@ class _TradingPageState extends State<TradingPage> {
                       startup.name.characters.first.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -723,129 +680,41 @@ class _TradingPageState extends State<TradingPage> {
                   '${startup.dailyVariation >= 0 ? '+' : ''}${startup.dailyVariation.toStringAsFixed(2).replaceAll('.', ',')}%',
                   style: TextStyle(
                     color: _variationColor(startup.dailyVariation),
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Text(
               startup.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               startup.sector ?? startup.stage,
-              style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
+              style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 12),
             ),
-            const SizedBox(height: 12),
+            const Spacer(),
             Text(
               _formatCurrency(startup.currentPrice),
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'Seus tokens: ${_formatQuantity(position?.quantity ?? 0)}',
-              style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStartupMarketList(Startup startup, _TradingViewData viewData) {
-    final isSelected = startup.id == viewData.startup.id;
-    final position = viewData.portfolio.positionForStartup(startup.id);
-
-    return InkWell(
-      onTap: () => _selectStartup(startup),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF20242D) : const Color(0xFF141517),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF3B82F6)
-                : const Color(0xFF2B3038),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF2A3340),
-              ),
-              child: Center(
-                child: Text(
-                  startup.name.characters.first.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    startup.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${startup.sector ?? startup.stage} • ${_formatCurrency(startup.currentPrice)}',
-                    style: const TextStyle(
-                      color: Color(0xFFB7BCC8),
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${startup.dailyVariation >= 0 ? '+' : ''}${startup.dailyVariation.toStringAsFixed(2).replaceAll('.', ',')}%',
-                  style: TextStyle(
-                    color: _variationColor(startup.dailyVariation),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Tokens: ${_formatQuantity(position?.quantity ?? 0)}',
-                  style: const TextStyle(
-                    color: Color(0xFF9CA3AF),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+              style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 11),
             ),
           ],
         ),
@@ -868,27 +737,19 @@ class _TradingPageState extends State<TradingPage> {
       );
     }
 
-    if (_showGrid) {
-      return GridView.builder(
-        itemCount: filteredStartups.length,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 0.86,
-        ),
-        itemBuilder: (context, index) {
-          return _buildStartupMarketCard(filteredStartups[index], viewData);
-        },
-      );
-    }
-
-    return Column(
-      children: filteredStartups
-          .map((startup) => _buildStartupMarketList(startup, viewData))
-          .toList(),
+    return GridView.builder(
+      itemCount: filteredStartups.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.78,
+      ),
+      itemBuilder: (context, index) {
+        return _buildStartupMarketCard(filteredStartups[index], viewData);
+      },
     );
   }
 
@@ -908,10 +769,10 @@ class _TradingPageState extends State<TradingPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: const Color(0xFF151618),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFF2E323A)),
           ),
           child: Column(
@@ -927,7 +788,7 @@ class _TradingPageState extends State<TradingPage> {
                           startup.name,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 22,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -936,7 +797,7 @@ class _TradingPageState extends State<TradingPage> {
                           startup.sector ?? startup.stage,
                           style: const TextStyle(
                             color: Color(0xFFD2E4FF),
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
                       ],
@@ -946,7 +807,7 @@ class _TradingPageState extends State<TradingPage> {
                     '${startup.dailyVariation >= 0 ? '+' : ''}${startup.dailyVariation.toStringAsFixed(2).replaceAll('.', ',')}%',
                     style: TextStyle(
                       color: _variationColor(startup.dailyVariation),
-                      fontSize: 15,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -999,7 +860,7 @@ class _TradingPageState extends State<TradingPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E7DFF),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       icon: const Icon(Icons.shopping_cart_checkout_rounded),
                       label: const Text('Comprar'),
@@ -1014,7 +875,7 @@ class _TradingPageState extends State<TradingPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFB84B58),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       icon: const Icon(Icons.sell_rounded),
                       label: const Text('Vender'),
@@ -1030,7 +891,7 @@ class _TradingPageState extends State<TradingPage> {
           'Ofertas de venda',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1053,7 +914,7 @@ class _TradingPageState extends State<TradingPage> {
           'Ofertas de compra',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1092,60 +953,19 @@ class _TradingPageState extends State<TradingPage> {
                       'Negociar',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Busque startups, filtre o mercado e monte suas carteiras recomendadas.',
+                      'Busque startups e filtre o mercado.',
                       style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 14),
                     ),
                   ],
                 ),
               ),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1B1D22),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF2B3038)),
-                ),
-                child: const Icon(Icons.tune_rounded, color: Colors.white),
-              ),
             ],
-          ),
-          const SizedBox(height: 22),
-          SizedBox(
-            height: 176,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                _buildTopInsightCard(
-                  icon: Icons.account_balance_wallet_rounded,
-                  title: 'Carteiras recomendadas',
-                  subtitle: 'Monte combinacoes de startups por tese e estagio.',
-                  accentColor: const Color(0xFF8AB4FF),
-                ),
-                const SizedBox(width: 14),
-                _buildTopInsightCard(
-                  icon: Icons.trending_up_rounded,
-                  title: 'Startups em destaque',
-                  subtitle:
-                      'Acompanhe as maiores variacoes para encontrar entradas.',
-                  accentColor: const Color(0xFFB7C9FF),
-                ),
-                const SizedBox(width: 14),
-                _buildTopInsightCard(
-                  icon: Icons.receipt_long_rounded,
-                  title: 'Book e execucao',
-                  subtitle:
-                      'Veja ordens abertas e execute compra ou venda na hora.',
-                  accentColor: const Color(0xFFF8F8F8),
-                ),
-              ],
-            ),
           ),
           const SizedBox(height: 20),
           Row(
@@ -1154,7 +974,7 @@ class _TradingPageState extends State<TradingPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFF121316),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: const Color(0xFF2B3038)),
                   ),
                   child: TextField(
@@ -1173,7 +993,7 @@ class _TradingPageState extends State<TradingPage> {
                         color: Colors.white,
                       ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 18),
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ),
@@ -1181,13 +1001,13 @@ class _TradingPageState extends State<TradingPage> {
               const SizedBox(width: 12),
               InkWell(
                 onTap: _openFilterSheet,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(14),
                 child: Container(
-                  width: 56,
-                  height: 56,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: const Color(0xFF121316),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: const Color(0xFF2B3038)),
                   ),
                   child: const Icon(Icons.tune_rounded, color: Colors.white),
@@ -1195,103 +1015,19 @@ class _TradingPageState extends State<TradingPage> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _showMarket = true;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: _showMarket
-                        ? const Color(0xFF3A3A3D)
-                        : const Color(0xFF151618),
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF4A4D56)),
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  icon: const Icon(Icons.show_chart_rounded),
-                  label: const Text('Mercado'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _showMarket = false;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: !_showMarket
-                        ? const Color(0xFF3A3A3D)
-                        : const Color(0xFF151618),
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF4A4D56)),
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  icon: const Icon(Icons.workspace_premium_outlined),
-                  label: const Text('Carteiras recomendadas'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF151618),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF2B3038)),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _showGrid = true;
-                        });
-                      },
-                      icon: Icon(
-                        Icons.grid_view_rounded,
-                        color: _showGrid
-                            ? Colors.white
-                            : const Color(0xFF7D8594),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _showGrid = false;
-                        });
-                      },
-                      icon: Icon(
-                        Icons.view_agenda_outlined,
-                        color: !_showGrid
-                            ? Colors.white
-                            : const Color(0xFF7D8594),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            _showMarket ? 'Mercado' : 'Carteiras recomendadas',
-            style: const TextStyle(
+          const SizedBox(height: 20),
+          const Text(
+            'Mercado',
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            _showMarket
-                ? 'Selecione a startup para abrir o book e executar operacoes.'
-                : 'Use os filtros para montar uma combinacao de startups por setor e estagio.',
-            style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 14),
+          const Text(
+            'Selecione uma startup para ver ofertas e operar.',
+            style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 14),
           ),
           const SizedBox(height: 18),
           if (_selectedStage != 'all')

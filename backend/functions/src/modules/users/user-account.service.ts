@@ -265,6 +265,20 @@ export const syncBasicUserProfile = async (
   );
 };
 
+export const creditUserBalance = async (
+  uid: string,
+  amount: number,
+): Promise<void> => {
+  await getUserDocRef(uid).set(
+    {
+      uid,
+      saldoDisponivel: FieldValue.increment(amount),
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true},
+  );
+};
+
 interface UpdateUserProfileInput {
   name: string;
   cpf: string;

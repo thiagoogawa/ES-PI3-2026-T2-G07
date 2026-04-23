@@ -9,6 +9,7 @@ class ApiConstants {
   static const String startups = '$baseUrl/v1/startups';
   static const String offers = '$baseUrl/v1/offers';
   static const String portfolio = '$baseUrl/v1/portfolio';
+  static const String portfolioDeposit = '$portfolio/deposit';
   static const String dashboard = '$baseUrl/v1/portfolio/dashboard';
   static const String transactions = '$baseUrl/v1/transactions';
 

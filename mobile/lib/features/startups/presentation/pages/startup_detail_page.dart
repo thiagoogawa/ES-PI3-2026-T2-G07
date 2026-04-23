@@ -119,10 +119,10 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
 
   Widget _buildMetricCard(String label, String value) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF151618),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFF2E323A)),
       ),
       child: Column(
@@ -130,14 +130,14 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
         children: [
           Text(
             label,
-            style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 12),
+            style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 11),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             value,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -153,7 +153,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
         title,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 20,
+          fontSize: 17,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -182,7 +182,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
               ),
               child: Text(
                 item,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
             ),
           )
@@ -199,7 +199,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF141517),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         final quantityController = TextEditingController(text: '1');
@@ -213,7 +213,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
             return Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+              padding: EdgeInsets.fromLTRB(18, 18, 18, bottomInset + 18),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -223,7 +223,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                       type == 'buy' ? 'Comprar tokens' : 'Vender tokens',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -235,7 +235,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: quantityController,
                       keyboardType: const TextInputType.numberWithOptions(
@@ -304,7 +304,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                               ? const Color(0xFF2E7DFF)
                               : const Color(0xFFFF7A8B),
                           foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(52),
+                          minimumSize: const Size.fromHeight(46),
                         ),
                         child: Text(
                           type == 'buy' ? 'Enviar compra' : 'Enviar venda',
@@ -482,10 +482,10 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
       children: [
         _buildSectionTitle('Balcao de tokens'),
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: const Color(0xFF151618),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFF2E323A)),
           ),
           child: Column(
@@ -495,7 +495,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                 'Negociacao simulada com saldo ficticio, conforme o escopo do MesclaInvest.',
                 style: TextStyle(
                   color: Color(0xFFB7BCC8),
-                  fontSize: 13,
+                  fontSize: 12,
                   height: 1.5,
                 ),
               ),
@@ -546,7 +546,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E7DFF),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       icon: const Icon(Icons.shopping_cart_checkout_rounded),
                       label: const Text('Comprar'),
@@ -561,7 +561,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFB84B58),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(44),
                       ),
                       icon: const Icon(Icons.sell_rounded),
                       label: const Text('Vender'),
@@ -619,7 +619,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF151618),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFF2E323A)),
       ),
       child: Column(
@@ -644,7 +644,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                     color: offer.type == 'buy'
                         ? const Color(0xFF84B5FF)
                         : const Color(0xFFFFA7B2),
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -652,7 +652,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
               const Spacer(),
               Text(
                 _formatDate(offer.createdAt),
-                style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 12),
+                style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 11),
               ),
             ],
           ),
@@ -677,12 +677,12 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
           const SizedBox(height: 12),
           Text(
             'Investidor: ${offer.userName ?? 'Nao informado'}',
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
           const SizedBox(height: 6),
           Text(
             'Valor total: ${_formatCurrency(offer.totalValue)}',
-            style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
+            style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 12),
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -711,12 +711,12 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
       onRefresh: _reload,
       color: const Color(0xFF4E91F3),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(20),
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -733,24 +733,24 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                         detail.name,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 28,
+                          fontSize: 22,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Text(
                         detail.sector ?? detail.stage,
                         style: const TextStyle(
                           color: Color(0xFFD2E4FF),
-                          fontSize: 15,
+                          fontSize: 13,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       Text(
                         _formatCurrency(detail.currentPrice),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 22,
+                          fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -759,7 +759,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                         _formatPercent(detail.dailyVariation),
                         style: TextStyle(
                           color: _variationColor(detail.dailyVariation),
-                          fontSize: 15,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -767,8 +767,8 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                   ),
                 ),
                 Container(
-                  width: 86,
-                  height: 86,
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0x332C76E0),
@@ -779,7 +779,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                       detail.name.characters.first.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 34,
+                        fontSize: 28,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -788,7 +788,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
               ],
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 18),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -822,7 +822,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                 : detail.description,
             style: const TextStyle(
               color: Color(0xFFE6E8EE),
-              fontSize: 14,
+              fontSize: 13,
               height: 1.6,
             ),
           ),
@@ -834,7 +834,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                 : detail.executiveSummary,
             style: const TextStyle(
               color: Color(0xFFE6E8EE),
-              fontSize: 14,
+              fontSize: 13,
               height: 1.6,
             ),
           ),
@@ -850,7 +850,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFF151618),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: const Color(0xFF2E323A)),
             ),
             child: Column(
@@ -858,17 +858,17 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
               children: [
                 Text(
                   'Plano de negocios: ${detail.businessPlanUrl ?? '-'}',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   'Pitch deck: ${detail.pitchDeckUrl ?? '-'}',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   'Videos: ${detail.videos.isEmpty ? '-' : detail.videos.join(' | ')}',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ],
             ),
@@ -911,7 +911,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: const Color(0xFF151618),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0xFF2E323A)),
                 ),
                 child: Column(
@@ -921,7 +921,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                       update.title,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -938,7 +938,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                       update.content,
                       style: const TextStyle(
                         color: Color(0xFFE6E8EE),
-                        fontSize: 13,
+                        fontSize: 12,
                         height: 1.5,
                       ),
                     ),
@@ -983,7 +983,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: const Color(0xFF151618),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0xFF2E323A)),
                 ),
                 child: Column(
@@ -993,7 +993,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                       question.question,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1004,7 +1004,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                           : 'Sem resposta publicada ainda.',
                       style: const TextStyle(
                         color: Color(0xFFE6E8EE),
-                        fontSize: 13,
+                        fontSize: 12,
                         height: 1.5,
                       ),
                     ),

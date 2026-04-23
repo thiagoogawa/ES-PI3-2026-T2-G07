@@ -1,9 +1,14 @@
 import {DecodedIdToken} from "firebase-admin/auth";
+import {ValidationError} from "../../core/errors/validation-error";
 import {adminDb} from "../../config/firebase-admin";
-import {getOrCreateUserAccount} from "../users/user-account.service";
+import {
+  creditUserBalance,
+  getOrCreateUserAccount,
+} from "../users/user-account.service";
 import {readNumber, readString, toIsoDate} from "../../utils/firestore-helpers";
 
 type DashboardPeriod = "1d" | "7d" | "1m" | "6m" | "ytd";
+const DEFAULT_SIMULATED_DEPOSIT_AMOUNT = 10000;
 
 const resolvePeriodStart = (period: DashboardPeriod): Date => {
   const now = new Date();
@@ -149,6 +154,25 @@ export class PortfolioService {
         profitLoss: currentValue - position.investedAmount,
       };
     });
+  }
+
+  static async simulateDeposit(
+    decodedToken: DecodedIdToken,
+    input: Record<string, unknown>,
+  ) {
+    const rawAmount = input.amount;
+    const amount = rawAmount == null ?
+      DEFAULT_SIMULATED_DEPOSIT_AMOUNT :
+      Number(rawAmount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new ValidationError("amount must be a positive number");
+    }
+
+    await getOrCreateUserAccount(decodedToken);
+    await creditUserBalance(decodedToken.uid, amount);
+
+    return PortfolioService.getPortfolio(decodedToken);
   }
 
   private static async buildTimeline(
