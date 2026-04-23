@@ -19,7 +19,7 @@ class StartupsApiDataSource {
 
   Future<StartupDetailModel> fetchStartupDetail(String startupId) async {
     final response = await _apiClient.get(
-      '${ApiConstants.startups}/$startupId',
+      ApiConstants.startupDetail(startupId),
     );
     return StartupDetailModel.fromJson(response);
   }

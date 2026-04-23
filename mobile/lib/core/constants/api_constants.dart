@@ -1,7 +1,7 @@
 class ApiConstants {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:5001/mesclainvest-dev/us-central1/api',
+    defaultValue: 'http://127.0.0.1:5001/mesclainvest-dev/us-central1',
   );
 
   static const String authMe = '$baseUrl/v1/auth/me';
@@ -12,7 +12,9 @@ class ApiConstants {
   static const String portfolioDeposit = '$portfolio/deposit';
   static const String dashboard = '$baseUrl/v1/portfolio/dashboard';
   static const String transactions = '$baseUrl/v1/transactions';
+  static const String health = '$baseUrl/health';
 
+  static String startupDetail(String startupId) => '$startups/$startupId';
   static String startupTrade(String startupId) => '$startups/$startupId/trade';
 
   static String offerAccept(String offerId) => '$offers/$offerId/accept';
