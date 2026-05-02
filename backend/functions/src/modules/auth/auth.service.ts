@@ -46,7 +46,9 @@ export class AuthService {
       email: decodedToken.email ?? null,
       emailVerified: decodedToken.email_verified ?? false,
       name: decodedToken.name ?? null,
-      picture: decodedToken.picture ?? null,
+      cpf: account.cpf,
+      phone: account.phone,
+      picture: account.picture ?? decodedToken.picture ?? null,
       provider: decodedToken.firebase?.sign_in_provider ?? null,
       account: {
         balance: account.balance,
@@ -64,6 +66,7 @@ export class AuthService {
     const name = input.name?.toString().trim() ?? "";
     const cpf = input.cpf?.toString().replace(/\D/g, "") ?? "";
     const phone = input.phone?.toString().trim() ?? "";
+    const picture = input.picture?.toString().trim() ?? "";
 
     if (!name) {
       throw new ValidationError("name is required");
@@ -78,7 +81,12 @@ export class AuthService {
     }
 
     await adminAuth.updateUser(decodedToken.uid, {displayName: name});
-    await updateUserProfile(decodedToken.uid, {name, cpf, phone});
+    await updateUserProfile(decodedToken.uid, {
+      name,
+      cpf,
+      phone,
+      picture: picture || null,
+    });
 
     const account = await getOrCreateUserAccount({
       ...decodedToken,
@@ -90,7 +98,9 @@ export class AuthService {
       email: decodedToken.email ?? null,
       emailVerified: decodedToken.email_verified ?? false,
       name,
-      picture: decodedToken.picture ?? null,
+      cpf: account.cpf,
+      phone: account.phone,
+      picture: account.picture ?? decodedToken.picture ?? null,
       provider: decodedToken.firebase?.sign_in_provider ?? null,
       account: {
         balance: account.balance,

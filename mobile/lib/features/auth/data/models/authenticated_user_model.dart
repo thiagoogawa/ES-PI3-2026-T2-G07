@@ -6,6 +6,8 @@ class AuthenticatedUserModel extends AuthenticatedUser {
     required super.email,
     required super.emailVerified,
     required super.name,
+    required super.cpf,
+    required super.phone,
     required super.picture,
     required super.provider,
   });
@@ -18,6 +20,8 @@ class AuthenticatedUserModel extends AuthenticatedUser {
       email: data['email'] as String?,
       emailVerified: data['emailVerified'] as bool? ?? false,
       name: data['name'] as String?,
+      cpf: data['cpf'] as String?,
+      phone: data['phone'] as String?,
       picture: data['picture'] as String?,
       provider: data['provider'] as String?,
     );

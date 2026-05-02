@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Permita acesso a galeria para definir sua foto de perfil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Permita selecionar e atualizar a foto de perfil na sua conta.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

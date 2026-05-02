@@ -24,6 +24,7 @@ class AuthApiDataSource {
     required String name,
     required String cpf,
     required String phone,
+    String? picture,
   }) async {
     final response = await _apiClient.post(
       ApiConstants.authProfile,
@@ -31,7 +32,7 @@ class AuthApiDataSource {
         'Authorization': 'Bearer $idToken',
         'Content-Type': 'application/json',
       },
-      body: {'name': name, 'cpf': cpf, 'phone': phone},
+      body: {'name': name, 'cpf': cpf, 'phone': phone, 'picture': picture},
     );
 
     return AuthenticatedUserModel.fromJson(response);
