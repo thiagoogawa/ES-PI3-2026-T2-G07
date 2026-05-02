@@ -273,11 +273,6 @@ class _TradingPageState extends State<TradingPage> {
               'Seus tokens: ${_formatQuantity(position?.quantity ?? 0)}',
               style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 11),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Toque para abrir a negociacao',
-              style: TextStyle(color: Color(0xFF7D8594), fontSize: 11),
-            ),
           ],
         ),
       ),
@@ -307,7 +302,7 @@ class _TradingPageState extends State<TradingPage> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.74,
+        childAspectRatio: 0.68,
       ),
       itemBuilder: (context, index) {
         return _buildStartupMarketCard(filteredStartups[index], portfolio);

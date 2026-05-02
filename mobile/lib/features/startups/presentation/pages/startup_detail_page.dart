@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/network/api_client.dart';
@@ -23,6 +25,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
   late final StartupTradingApiDataSource _startupTradingApiDataSource;
   late final AuthRemoteDataSource _authRemoteDataSource;
   late Future<_StartupDetailViewData> _screenFuture;
+  _DashboardPeriod _selectedDashboardPeriod = _DashboardPeriod.monthly;
 
   bool _isSubmittingTrade = false;
   String? _busyOfferId;
@@ -187,6 +190,425 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
             ),
           )
           .toList(),
+    );
+  }
+
+  Widget _buildDashboardMetricCard({
+    required String label,
+    required String value,
+    Color valueColor = Colors.white,
+    String? helper,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151618),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF2E323A)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: Color(0xFF8F96A3), fontSize: 11),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (helper != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              helper,
+              style: const TextStyle(
+                color: Color(0xFF8F96A3),
+                fontSize: 11,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  DateTime _resolveDashboardStart(_DashboardPeriod period, DateTime reference) {
+    switch (period) {
+      case _DashboardPeriod.daily:
+        return reference.subtract(const Duration(days: 1));
+      case _DashboardPeriod.weekly:
+        return reference.subtract(const Duration(days: 7));
+      case _DashboardPeriod.monthly:
+        return DateTime(reference.year, reference.month - 1, reference.day);
+      case _DashboardPeriod.sixMonths:
+        return DateTime(reference.year, reference.month - 6, reference.day);
+      case _DashboardPeriod.ytd:
+        return DateTime(reference.year, 1, 1);
+    }
+  }
+
+  List<_StartupValuationPoint> _buildValuationSeries(
+    StartupDetail detail,
+    double trackedQuantity,
+  ) {
+    final now = DateTime.now();
+    final points =
+        detail.priceHistory
+            .map((point) {
+              final timestamp = DateTime.tryParse(point.timestamp ?? '');
+              if (timestamp == null) {
+                return null;
+              }
+
+              return _StartupValuationPoint(
+                timestamp: timestamp,
+                unitPrice: point.price,
+                trackedValue: point.price * trackedQuantity,
+              );
+            })
+            .whereType<_StartupValuationPoint>()
+            .toList()
+          ..sort((left, right) => left.timestamp.compareTo(right.timestamp));
+
+    if (points.isEmpty) {
+      points.add(
+        _StartupValuationPoint(
+          timestamp: now,
+          unitPrice: detail.currentPrice,
+          trackedValue: detail.currentPrice * trackedQuantity,
+        ),
+      );
+      return points;
+    }
+
+    final lastPoint = points.last;
+    final shouldAppendCurrent =
+        now.difference(lastPoint.timestamp).inMinutes >= 1 ||
+        (lastPoint.unitPrice - detail.currentPrice).abs() > 0.001;
+
+    if (shouldAppendCurrent) {
+      points.add(
+        _StartupValuationPoint(
+          timestamp: now,
+          unitPrice: detail.currentPrice,
+          trackedValue: detail.currentPrice * trackedQuantity,
+        ),
+      );
+    }
+
+    return points;
+  }
+
+  List<_StartupValuationPoint> _filterValuationSeries(
+    List<_StartupValuationPoint> points,
+    _DashboardPeriod period,
+  ) {
+    if (points.isEmpty) {
+      return const [];
+    }
+
+    final now = DateTime.now();
+    final start = _resolveDashboardStart(period, now);
+    _StartupValuationPoint? baseline;
+    final filtered = <_StartupValuationPoint>[];
+
+    for (final point in points) {
+      if (point.timestamp.isBefore(start)) {
+        baseline = point;
+        continue;
+      }
+      filtered.add(point);
+    }
+
+    if (baseline != null &&
+        (filtered.isEmpty || filtered.first.timestamp.isAfter(start))) {
+      filtered.insert(
+        0,
+        _StartupValuationPoint(
+          timestamp: start,
+          unitPrice: baseline.unitPrice,
+          trackedValue: baseline.trackedValue,
+        ),
+      );
+    }
+
+    if (filtered.isEmpty) {
+      return [points.last];
+    }
+
+    return filtered;
+  }
+
+  _StartupValuationDashboardData _buildDashboardData(
+    _StartupDetailViewData viewData,
+  ) {
+    final detail = viewData.detail;
+    final position = viewData.portfolio.positionForStartup(detail.id);
+    final trackedQuantity = position != null && position.quantity > 0
+        ? position.quantity
+        : 1.0;
+    final allPoints = _buildValuationSeries(detail, trackedQuantity);
+    final visiblePoints = _filterValuationSeries(
+      allPoints,
+      _selectedDashboardPeriod,
+    );
+    final firstPoint = visiblePoints.first;
+    final lastPoint = visiblePoints.last;
+    final values = visiblePoints.map((point) => point.trackedValue).toList();
+    final minValue = values.reduce(math.min).toDouble();
+    final maxValue = values.reduce(math.max).toDouble();
+    final periodChange = lastPoint.trackedValue - firstPoint.trackedValue;
+    final periodChangePercent = firstPoint.trackedValue > 0
+        ? (periodChange / firstPoint.trackedValue) * 100
+        : 0.0;
+    final oscillationPercent = minValue > 0
+        ? ((maxValue - minValue) / minValue) * 100
+        : 0.0;
+
+    return _StartupValuationDashboardData(
+      points: visiblePoints,
+      trackedQuantity: trackedQuantity,
+      isHoldingPosition: position != null && position.quantity > 0,
+      currentValue: lastPoint.trackedValue,
+      initialValue: firstPoint.trackedValue,
+      currentPrice: lastPoint.unitPrice,
+      initialPrice: firstPoint.unitPrice,
+      periodChange: periodChange,
+      periodChangePercent: periodChangePercent,
+      oscillationPercent: oscillationPercent,
+      lowestValue: minValue,
+      highestValue: maxValue,
+      averagePrice: position?.averagePrice ?? 0.0,
+    );
+  }
+
+  String _formatChartLabel(DateTime timestamp) {
+    if (_selectedDashboardPeriod == _DashboardPeriod.daily) {
+      final hour = timestamp.hour.toString().padLeft(2, '0');
+      final minute = timestamp.minute.toString().padLeft(2, '0');
+      return '$hour:$minute';
+    }
+
+    if (_selectedDashboardPeriod == _DashboardPeriod.sixMonths ||
+        _selectedDashboardPeriod == _DashboardPeriod.ytd) {
+      final month = timestamp.month.toString().padLeft(2, '0');
+      final year = timestamp.year.toString().substring(2);
+      return '$month/$year';
+    }
+
+    final day = timestamp.day.toString().padLeft(2, '0');
+    final month = timestamp.month.toString().padLeft(2, '0');
+    return '$day/$month';
+  }
+
+  Widget _buildValuationDashboard(_StartupDetailViewData viewData) {
+    final dashboard = _buildDashboardData(viewData);
+    final variationColor = _variationColor(dashboard.periodChangePercent);
+    final middlePoint = dashboard.points[dashboard.points.length ~/ 2];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Acompanhamento da valorizacao'),
+        Text(
+          dashboard.isHoldingPosition
+              ? 'Serie calculada a partir do historico de negociacoes e da sua quantidade atual em carteira.'
+              : 'Voce ainda nao possui tokens desta startup. O painel mostra a trajetoria unitaria do token para apoiar a decisao de investimento.',
+          style: const TextStyle(
+            color: Color(0xFFB7BCC8),
+            fontSize: 12,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF121E33), Color(0xFF0E1625)],
+            ),
+            border: Border.all(color: const Color(0xFF2E323A)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _StartupValuationChart(
+                points: dashboard.points,
+                lineColor: variationColor,
+                fillColor: variationColor.withAlpha(36),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _formatChartLabel(dashboard.points.first.timestamp),
+                      style: const TextStyle(
+                        color: Color(0xFF8F96A3),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _formatChartLabel(middlePoint.timestamp),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFF8F96A3),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _formatChartLabel(dashboard.points.last.timestamp),
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        color: Color(0xFF8F96A3),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          dashboard.isHoldingPosition
+                              ? 'Valor monitorado da sua posicao'
+                              : 'Trajetoria do valor unitario',
+                          style: const TextStyle(
+                            color: Color(0xFF8F96A3),
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _formatCurrency(dashboard.currentValue),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: variationColor.withAlpha(41),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _formatPercent(dashboard.periodChangePercent),
+                      style: TextStyle(
+                        color: variationColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                dashboard.isHoldingPosition
+                    ? 'Quantidade acompanhada: ${_formatQuantity(dashboard.trackedQuantity)} token(s).'
+                    : 'Base de leitura: 1 token.',
+                style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _DashboardPeriod.values.map((period) {
+              final isSelected = period == _selectedDashboardPeriod;
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: period == _DashboardPeriod.values.last ? 0 : 8,
+                ),
+                child: ChoiceChip(
+                  label: Text(period.label),
+                  selected: isSelected,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedDashboardPeriod = period;
+                    });
+                  },
+                  selectedColor: const Color(0xFF2E7DFF),
+                  backgroundColor: const Color(0xFF151618),
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : const Color(0xFFB7BCC8),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  side: const BorderSide(color: Color(0xFF2E323A)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 14),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 1.5,
+          children: [
+            _buildDashboardMetricCard(
+              label: 'Inicio do periodo',
+              value: _formatCurrency(dashboard.initialValue),
+              helper:
+                  'Preco inicial: ${_formatCurrency(dashboard.initialPrice)}',
+            ),
+            _buildDashboardMetricCard(
+              label: 'Variacao acumulada',
+              value: _formatCurrency(dashboard.periodChange),
+              valueColor: variationColor,
+              helper: _formatPercent(dashboard.periodChangePercent),
+            ),
+            _buildDashboardMetricCard(
+              label: 'Oscilacao',
+              value: _formatPercent(dashboard.oscillationPercent),
+              helper:
+                  'Min ${_formatCurrency(dashboard.lowestValue)}  Max ${_formatCurrency(dashboard.highestValue)}',
+            ),
+            _buildDashboardMetricCard(
+              label: 'Tendencia',
+              value: dashboard.trendLabel,
+              valueColor: variationColor,
+              helper: dashboard.isHoldingPosition
+                  ? 'Preco medio: ${_formatCurrency(dashboard.averagePrice)}'
+                  : 'Preco atual: ${_formatCurrency(dashboard.currentPrice)}',
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -813,6 +1235,8 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
             ],
           ),
           const SizedBox(height: 24),
+          _buildValuationDashboard(viewData),
+          const SizedBox(height: 24),
           _buildTradingPanel(viewData),
           const SizedBox(height: 24),
           _buildSectionTitle('Descricao'),
@@ -1097,4 +1521,211 @@ class _TradeDraft {
     required this.quantity,
     required this.pricePerToken,
   });
+}
+
+enum _DashboardPeriod { daily, weekly, monthly, sixMonths, ytd }
+
+extension on _DashboardPeriod {
+  String get label {
+    switch (this) {
+      case _DashboardPeriod.daily:
+        return 'Dia';
+      case _DashboardPeriod.weekly:
+        return 'Sem';
+      case _DashboardPeriod.monthly:
+        return 'Mes';
+      case _DashboardPeriod.sixMonths:
+        return '6m';
+      case _DashboardPeriod.ytd:
+        return 'YTD';
+    }
+  }
+}
+
+class _StartupValuationPoint {
+  final DateTime timestamp;
+  final double unitPrice;
+  final double trackedValue;
+
+  const _StartupValuationPoint({
+    required this.timestamp,
+    required this.unitPrice,
+    required this.trackedValue,
+  });
+}
+
+class _StartupValuationDashboardData {
+  final List<_StartupValuationPoint> points;
+  final double trackedQuantity;
+  final bool isHoldingPosition;
+  final double currentValue;
+  final double initialValue;
+  final double currentPrice;
+  final double initialPrice;
+  final double periodChange;
+  final double periodChangePercent;
+  final double oscillationPercent;
+  final double lowestValue;
+  final double highestValue;
+  final double averagePrice;
+
+  const _StartupValuationDashboardData({
+    required this.points,
+    required this.trackedQuantity,
+    required this.isHoldingPosition,
+    required this.currentValue,
+    required this.initialValue,
+    required this.currentPrice,
+    required this.initialPrice,
+    required this.periodChange,
+    required this.periodChangePercent,
+    required this.oscillationPercent,
+    required this.lowestValue,
+    required this.highestValue,
+    required this.averagePrice,
+  });
+
+  String get trendLabel {
+    if (periodChangePercent > 0.5) {
+      return 'Alta';
+    }
+    if (periodChangePercent < -0.5) {
+      return 'Queda';
+    }
+    return 'Estavel';
+  }
+}
+
+class _StartupValuationChart extends StatelessWidget {
+  final List<_StartupValuationPoint> points;
+  final Color lineColor;
+  final Color fillColor;
+
+  const _StartupValuationChart({
+    required this.points,
+    required this.lineColor,
+    required this.fillColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 180,
+      width: double.infinity,
+      child: CustomPaint(
+        painter: _StartupValuationChartPainter(
+          points: points,
+          lineColor: lineColor,
+          fillColor: fillColor,
+        ),
+      ),
+    );
+  }
+}
+
+class _StartupValuationChartPainter extends CustomPainter {
+  final List<_StartupValuationPoint> points;
+  final Color lineColor;
+  final Color fillColor;
+
+  const _StartupValuationChartPainter({
+    required this.points,
+    required this.lineColor,
+    required this.fillColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) {
+      return;
+    }
+
+    const horizontalPadding = 8.0;
+    const verticalPadding = 12.0;
+    final chartWidth = size.width - horizontalPadding * 2;
+    final chartHeight = size.height - verticalPadding * 2;
+    final minValue = points.map((point) => point.trackedValue).reduce(math.min);
+    final maxValue = points.map((point) => point.trackedValue).reduce(math.max);
+    final valueRange = math.max(maxValue - minValue, 1.0);
+    final firstMillis = points.first.timestamp.millisecondsSinceEpoch
+        .toDouble();
+    final lastMillis = points.last.timestamp.millisecondsSinceEpoch.toDouble();
+    final timeRange = math.max(lastMillis - firstMillis, 1.0);
+
+    final gridPaint = Paint()
+      ..color = const Color(0x223C4653)
+      ..strokeWidth = 1;
+
+    for (var index = 0; index < 4; index++) {
+      final y = verticalPadding + (chartHeight / 3) * index;
+      canvas.drawLine(
+        Offset(horizontalPadding, y),
+        Offset(size.width - horizontalPadding, y),
+        gridPaint,
+      );
+    }
+
+    final linePath = Path();
+    final fillPath = Path();
+
+    for (var index = 0; index < points.length; index++) {
+      final point = points[index];
+      final x =
+          horizontalPadding +
+          (((point.timestamp.millisecondsSinceEpoch - firstMillis) /
+                  timeRange) *
+              chartWidth);
+      final normalizedValue = (point.trackedValue - minValue) / valueRange;
+      final y = verticalPadding + (1 - normalizedValue) * chartHeight;
+      final offset = Offset(x, y);
+
+      if (index == 0) {
+        linePath.moveTo(offset.dx, offset.dy);
+        fillPath.moveTo(offset.dx, size.height - verticalPadding);
+        fillPath.lineTo(offset.dx, offset.dy);
+      } else {
+        linePath.lineTo(offset.dx, offset.dy);
+        fillPath.lineTo(offset.dx, offset.dy);
+      }
+    }
+
+    final lastX =
+        horizontalPadding +
+        (((points.last.timestamp.millisecondsSinceEpoch - firstMillis) /
+                timeRange) *
+            chartWidth);
+    fillPath.lineTo(lastX, size.height - verticalPadding);
+    fillPath.close();
+
+    final fillPaint = Paint()
+      ..color = fillColor
+      ..style = PaintingStyle.fill;
+    final linePaint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(linePath, linePaint);
+
+    final lastPoint = points.last;
+    final lastNormalizedValue =
+        (lastPoint.trackedValue - minValue) / valueRange;
+    final lastOffset = Offset(
+      lastX,
+      verticalPadding + (1 - lastNormalizedValue) * chartHeight,
+    );
+
+    canvas.drawCircle(lastOffset, 5, Paint()..color = const Color(0xFF0E1625));
+    canvas.drawCircle(lastOffset, 3, Paint()..color = lineColor);
+  }
+
+  @override
+  bool shouldRepaint(covariant _StartupValuationChartPainter oldDelegate) {
+    return oldDelegate.points != points ||
+        oldDelegate.lineColor != lineColor ||
+        oldDelegate.fillColor != fillColor;
+  }
 }
