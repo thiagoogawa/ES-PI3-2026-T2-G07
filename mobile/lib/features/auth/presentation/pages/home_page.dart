@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/network/api_client.dart';
@@ -28,6 +30,15 @@ class _HomePageState extends State<HomePage> {
   Future<StartupPortfolioSnapshotModel>? _portfolioFuture;
   int _selectedIndex = 0;
   bool _isDepositing = false;
+
+  static const List<Color> _portfolioChartColors = [
+    Color(0xFF4E91F3),
+    Color(0xFF6FD3C0),
+    Color(0xFFFFB866),
+    Color(0xFFE985FF),
+    Color(0xFFFF7A8B),
+    Color(0xFF8BC4FF),
+  ];
 
   @override
   void initState() {
@@ -529,6 +540,124 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  double _portfolioAllocationValue(StartupPortfolioPositionModel position) {
+    if (position.currentValue > 0) {
+      return position.currentValue;
+    }
+
+    if (position.investedAmount > 0) {
+      return position.investedAmount;
+    }
+
+    return position.quantity;
+  }
+
+  List<_PortfolioSlice> _buildPortfolioSlices(
+    StartupPortfolioSnapshotModel portfolio,
+  ) {
+    final positions = [...portfolio.positions]
+      ..sort((left, right) {
+        return _portfolioAllocationValue(
+          right,
+        ).compareTo(_portfolioAllocationValue(left));
+      });
+
+    final total = positions.fold<double>(
+      0,
+      (sum, position) => sum + _portfolioAllocationValue(position),
+    );
+
+    return positions.asMap().entries.map((entry) {
+      final index = entry.key;
+      final position = entry.value;
+      final value = _portfolioAllocationValue(position);
+
+      return _PortfolioSlice(
+        label: position.startupName,
+        value: value,
+        percentage: total > 0 ? (value / total) * 100 : 0,
+        color: _portfolioChartColors[index % _portfolioChartColors.length],
+      );
+    }).toList();
+  }
+
+  Widget _buildPortfolioDistributionSection(
+    StartupPortfolioSnapshotModel portfolio,
+  ) {
+    final slices = _buildPortfolioSlices(portfolio);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151618),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF2A2E36)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Distribuicao das posicoes',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Participacao de cada ativo na carteira atual.',
+            style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+          Center(child: _PortfolioPieChart(slices: slices)),
+          const SizedBox(height: 20),
+          for (final slice in slices) ...[
+            _buildPortfolioLegendItem(slice),
+            if (slice != slices.last) const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortfolioLegendItem(_PortfolioSlice slice) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: slice.color,
+            borderRadius: BorderRadius.circular(999),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            slice.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          '${slice.percentage.toStringAsFixed(1).replaceAll('.', ',')}%',
+          style: const TextStyle(
+            color: Color(0xFFB7BCC8),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildPortfolioTab() {
     return RefreshIndicator(
       onRefresh: _reloadHomeData,
@@ -603,43 +732,6 @@ class _HomePageState extends State<HomePage> {
             children: [
               _buildHeader(),
               const SizedBox(height: 28),
-              _buildPortfolioSummary(portfolio),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF151618),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF2A2E36)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildProfileRow(
-                        'Saldo reservado',
-                        _formatCurrency(portfolio.reservedBalance),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildProfileRow(
-                        'Total investido',
-                        _formatCurrency(portfolio.totalInvested),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-              const Text(
-                'Posicoes',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 14),
               if (portfolio.positions.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -657,9 +749,22 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-              for (final position in portfolio.positions) ...[
-                _buildPortfolioPositionCard(position),
-                const SizedBox(height: 12),
+              if (portfolio.positions.isNotEmpty) ...[
+                _buildPortfolioDistributionSection(portfolio),
+                const SizedBox(height: 22),
+                const Text(
+                  'Posicoes',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                for (final position in portfolio.positions) ...[
+                  _buildPortfolioPositionCard(position),
+                  const SizedBox(height: 12),
+                ],
               ],
               const SizedBox(height: 24),
             ],
@@ -1129,6 +1234,140 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+}
+
+class _PortfolioSlice {
+  final String label;
+  final double value;
+  final double percentage;
+  final Color color;
+
+  const _PortfolioSlice({
+    required this.label,
+    required this.value,
+    required this.percentage,
+    required this.color,
+  });
+}
+
+class _PortfolioPieChart extends StatelessWidget {
+  final List<_PortfolioSlice> slices;
+
+  const _PortfolioPieChart({required this.slices});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = slices.fold<double>(0, (sum, slice) => sum + slice.value);
+
+    return SizedBox(
+      width: 220,
+      height: 220,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CustomPaint(
+            size: const Size.square(220),
+            painter: _PortfolioPieChartPainter(slices: slices),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Ativos',
+                style: TextStyle(color: Color(0xFF8F96A3), fontSize: 12),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${slices.length}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                total > 0 ? 'Total ${_formatCompactCurrency(total)}' : '-',
+                style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 11),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatCompactCurrency(double value) {
+    final fixed = value.toStringAsFixed(0);
+    final chars = fixed.split('');
+    final buffer = StringBuffer();
+
+    for (var index = 0; index < chars.length; index++) {
+      final reverseIndex = chars.length - index;
+      buffer.write(chars[index]);
+      if (reverseIndex > 1 && reverseIndex % 3 == 1) {
+        buffer.write('.');
+      }
+    }
+
+    return 'R\$ ${buffer.toString()}';
+  }
+}
+
+class _PortfolioPieChartPainter extends CustomPainter {
+  final List<_PortfolioSlice> slices;
+
+  const _PortfolioPieChartPainter({required this.slices});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = slices.fold<double>(0, (sum, slice) => sum + slice.value);
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final separatorPaint = Paint()
+      ..color = const Color(0xFF0F0F10)
+      ..strokeWidth = 2;
+
+    if (total <= 0) {
+      final fallbackPaint = Paint()..color = const Color(0xFF1E222A);
+      canvas.drawCircle(center, radius, fallbackPaint);
+      return;
+    }
+
+    var startAngle = -math.pi / 2;
+
+    for (final slice in slices) {
+      final sweepAngle = (slice.value / total) * math.pi * 2;
+      final paint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = slice.color;
+      final path = Path()
+        ..moveTo(center.dx, center.dy)
+        ..arcTo(rect, startAngle, sweepAngle, false)
+        ..close();
+
+      canvas.drawPath(path, paint);
+      canvas.drawLine(
+        center,
+        Offset(
+          center.dx + math.cos(startAngle) * radius,
+          center.dy + math.sin(startAngle) * radius,
+        ),
+        separatorPaint,
+      );
+
+      startAngle += sweepAngle;
+    }
+
+    final centerPaint = Paint()..color = const Color(0xFF151618);
+    canvas.drawCircle(center, radius * 0.42, centerPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PortfolioPieChartPainter oldDelegate) {
+    return oldDelegate.slices != slices;
   }
 }
 
