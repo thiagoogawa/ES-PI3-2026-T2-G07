@@ -39,12 +39,12 @@ class _HomePageState extends State<HomePage> {
   bool _isRefreshingProfile = false;
 
   static const List<Color> _portfolioChartColors = [
-    Color(0xFF4E91F3),
-    Color(0xFF6FD3C0),
-    Color(0xFFFFB866),
-    Color(0xFFE985FF),
-    Color(0xFFFF7A8B),
-    Color(0xFF8BC4FF),
+    Color(0xFF295AA5),
+    Color(0xFF1F7668),
+    Color(0xFF9A6630),
+    Color(0xFF784292),
+    Color(0xFF9B4150),
+    Color(0xFF3A648D),
   ];
 
   @override
@@ -766,6 +766,7 @@ class _HomePageState extends State<HomePage> {
       return _PortfolioSlice(
         label: position.startupName,
         value: value,
+        investedAmount: position.investedAmount,
         percentage: total > 0 ? (value / total) * 100 : 0,
         color: _portfolioChartColors[index % _portfolioChartColors.length],
       );
@@ -776,9 +777,8 @@ class _HomePageState extends State<HomePage> {
     StartupPortfolioSnapshotModel portfolio,
   ) {
     final slices = _buildPortfolioSlices(portfolio);
-
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
         color: const Color(0xFF151618),
         borderRadius: BorderRadius.circular(20),
@@ -800,168 +800,164 @@ class _HomePageState extends State<HomePage> {
             'Participacao de cada ativo na carteira atual.',
             style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 13),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Center(child: _PortfolioPieChart(slices: slices)),
-          const SizedBox(height: 20),
-          for (final slice in slices) ...[
-            _buildPortfolioLegendItem(slice),
-            if (slice != slices.last) const SizedBox(height: 10),
-          ],
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF101216),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF272C35)),
+            ),
+            child: Column(
+              children: [
+                for (final slice in slices) ...[
+                  _buildPortfolioLegendItem(slice),
+                  if (slice != slices.last) const SizedBox(height: 10),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildPortfolioLegendItem(_PortfolioSlice slice) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: slice.color,
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            slice.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16191F),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF2A2F39)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: slice.color,
+              borderRadius: BorderRadius.circular(999),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          '${slice.percentage.toStringAsFixed(1).replaceAll('.', ',')}%',
-          style: const TextStyle(
-            color: Color(0xFFB7BCC8),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              slice.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Text(
+            '${slice.percentage.toStringAsFixed(1)}%',
+            style: const TextStyle(
+              color: Color(0xFFB7BCC8),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildPortfolioTab() {
-    return RefreshIndicator(
-      onRefresh: _reloadHomeData,
-      color: const Color(0xFF4E91F3),
-      child: FutureBuilder<StartupPortfolioSnapshotModel>(
-        future: _portfolioRequest(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: const [
-                SizedBox(height: 160),
-                Center(
-                  child: CircularProgressIndicator(color: Color(0xFF4E91F3)),
-                ),
-              ],
-            );
-          }
-
-          if (snapshot.hasError) {
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 28),
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF151618),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2A2E36)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Nao foi possivel carregar o portfolio.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '${snapshot.error}',
-                        style: const TextStyle(
-                          color: Color(0xFFB7BCC8),
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      OutlinedButton(
-                        onPressed: _reloadHomeData,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Color(0xFF4A4D56)),
-                        ),
-                        child: const Text('Tentar novamente'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }
-
-          final portfolio = snapshot.data!;
-
-          return ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 28),
-              if (portfolio.positions.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF121212),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFF2A2E36)),
-                  ),
-                  child: const Text(
-                    'Voce ainda nao possui tokens em carteira. Compre uma startup para ver suas posicoes aqui.',
-                    style: TextStyle(
-                      color: Color(0xFFB7BCC8),
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              if (portfolio.positions.isNotEmpty) ...[
-                _buildPortfolioDistributionSection(portfolio),
-                const SizedBox(height: 22),
-                const Text(
-                  'Posicoes',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                for (final position in portfolio.positions) ...[
-                  _buildPortfolioPositionCard(position),
-                  const SizedBox(height: 12),
-                ],
-              ],
-              const SizedBox(height: 24),
-            ],
+    return FutureBuilder<StartupPortfolioSnapshotModel>(
+      future: _portfolioRequest(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF4E91F3)),
           );
-        },
-      ),
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Nao foi possivel carregar o portfolio.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Color(0xFFB7BCC8)),
+                ),
+                const SizedBox(height: 18),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _portfolioFuture = _fetchPortfolio();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF346AC0),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Tentar novamente'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final portfolio = snapshot.data!;
+
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 28),
+            if (portfolio.positions.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF121212),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFF2A2E36)),
+                ),
+                child: const Text(
+                  'Voce ainda nao possui tokens em carteira. Compre uma startup para ver suas posicoes aqui.',
+                  style: TextStyle(
+                    color: Color(0xFFB7BCC8),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            if (portfolio.positions.isNotEmpty) ...[
+              _buildPortfolioDistributionSection(portfolio),
+              const SizedBox(height: 22),
+              const Text(
+                'Posicoes',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 14),
+              for (final position in portfolio.positions) ...[
+                _buildPortfolioPositionCard(position),
+                const SizedBox(height: 12),
+              ],
+            ],
+            const SizedBox(height: 24),
+          ],
+        );
+      },
     );
   }
 
@@ -1012,11 +1008,11 @@ class _HomePageState extends State<HomePage> {
                         ? Icons.trending_up_rounded
                         : Icons.trending_down_rounded,
                     color: _variationColor(startup.dailyVariation),
-                    size: 20,
+                    size: 18,
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 _formatPercent(startup.dailyVariation),
                 style: TextStyle(
@@ -1525,62 +1521,237 @@ class _HomePageState extends State<HomePage> {
 class _PortfolioSlice {
   final String label;
   final double value;
+  final double investedAmount;
   final double percentage;
   final Color color;
 
   const _PortfolioSlice({
     required this.label,
     required this.value,
+    required this.investedAmount,
     required this.percentage,
     required this.color,
   });
 }
 
-class _PortfolioPieChart extends StatelessWidget {
+class _PortfolioPieChart extends StatefulWidget {
   final List<_PortfolioSlice> slices;
 
   const _PortfolioPieChart({required this.slices});
 
   @override
+  State<_PortfolioPieChart> createState() => _PortfolioPieChartState();
+}
+
+class _PortfolioPieChartState extends State<_PortfolioPieChart> {
+  int? _selectedIndex;
+
+  void _handlePointer(Offset localPosition, Size size) {
+    final selectedIndex = _hitTestSlice(localPosition, size);
+    if (selectedIndex == _selectedIndex) {
+      return;
+    }
+
+    setState(() {
+      _selectedIndex = selectedIndex;
+    });
+  }
+
+  void _clearSelection() {
+    if (_selectedIndex == null) {
+      return;
+    }
+
+    setState(() {
+      _selectedIndex = null;
+    });
+  }
+
+  int? _hitTestSlice(Offset position, Size size) {
+    final total = widget.slices.fold<double>(
+      0,
+      (sum, slice) => sum + slice.value,
+    );
+    if (total <= 0) {
+      return null;
+    }
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final dx = position.dx - center.dx;
+    final dy = position.dy - center.dy;
+    final distance = math.sqrt(dx * dx + dy * dy);
+    final radius = math.min(size.width, size.height) / 2;
+    final innerRadius = radius * 0.42;
+
+    if (distance < innerRadius || distance > radius) {
+      return null;
+    }
+
+    var angle = math.atan2(dy, dx) + math.pi / 2;
+    if (angle < 0) {
+      angle += math.pi * 2;
+    }
+
+    var startAngle = 0.0;
+    for (var index = 0; index < widget.slices.length; index++) {
+      final sweepAngle = (widget.slices[index].value / total) * math.pi * 2;
+      final endAngle = startAngle + sweepAngle;
+      if (angle >= startAngle && angle < endAngle) {
+        return index;
+      }
+      startAngle = endAngle;
+    }
+
+    return widget.slices.isEmpty ? null : widget.slices.length - 1;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final slices = widget.slices;
     final total = slices.fold<double>(0, (sum, slice) => sum + slice.value);
+    final selectedSlice = _selectedIndex == null
+        ? null
+        : slices[_selectedIndex!];
+    const chartSize = 208.0;
 
     return SizedBox(
       width: 220,
-      height: 220,
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          CustomPaint(
-            size: const Size.square(220),
-            painter: _PortfolioPieChartPainter(slices: slices),
+          GestureDetector(
+            onTapDown: (details) => _handlePointer(
+              details.localPosition,
+              const Size.square(chartSize),
+            ),
+            onTapUp: (_) => _clearSelection(),
+            onTapCancel: _clearSelection,
+            onPanDown: (details) => _handlePointer(
+              details.localPosition,
+              const Size.square(chartSize),
+            ),
+            onPanUpdate: (details) => _handlePointer(
+              details.localPosition,
+              const Size.square(chartSize),
+            ),
+            onPanEnd: (_) => _clearSelection(),
+            child: SizedBox(
+              width: chartSize,
+              height: chartSize,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    size: const Size.square(chartSize),
+                    painter: _PortfolioPieChartPainter(
+                      slices: slices,
+                      selectedIndex: _selectedIndex,
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Ativos',
+                        style: TextStyle(
+                          color: Color(0xFF8F96A3),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${slices.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        total > 0
+                            ? 'Total ${_formatCompactCurrency(total)}'
+                            : '-',
+                        style: const TextStyle(
+                          color: Color(0xFFB7BCC8),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Ativos',
-                style: TextStyle(color: Color(0xFF8F96A3), fontSize: 12),
+          const SizedBox(height: 14),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 160),
+            child: Container(
+              key: ValueKey(selectedSlice?.label ?? 'portfolio-hint'),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF101216),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF2A2F39)),
               ),
-              const SizedBox(height: 4),
-              Text(
-                '${slices.length}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                total > 0 ? 'Total ${_formatCompactCurrency(total)}' : '-',
-                style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 11),
-              ),
-            ],
+              child: selectedSlice == null
+                  ? const Text(
+                      'Pressione uma fatia para ver quanto foi investido.',
+                      style: TextStyle(
+                        color: Color(0xFF97A0AE),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          selectedSlice.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Investido ${_formatCurrency(selectedSlice.investedAmount)}',
+                          style: const TextStyle(
+                            color: Color(0xFFD2D6DE),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  static String _formatCurrency(double value) {
+    final normalized = value.isFinite ? value : 0;
+    final fixed = normalized.toStringAsFixed(2);
+    final parts = fixed.split('.');
+    final chars = parts.first.split('');
+    final buffer = StringBuffer();
+
+    for (var index = 0; index < chars.length; index++) {
+      final reverseIndex = chars.length - index;
+      buffer.write(chars[index]);
+      if (reverseIndex > 1 && reverseIndex % 3 == 1) {
+        buffer.write('.');
+      }
+    }
+
+    return 'R\$ ${buffer.toString()},${parts[1]}';
   }
 
   static String _formatCompactCurrency(double value) {
@@ -1602,15 +1773,18 @@ class _PortfolioPieChart extends StatelessWidget {
 
 class _PortfolioPieChartPainter extends CustomPainter {
   final List<_PortfolioSlice> slices;
+  final int? selectedIndex;
 
-  const _PortfolioPieChartPainter({required this.slices});
+  const _PortfolioPieChartPainter({
+    required this.slices,
+    required this.selectedIndex,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final total = slices.fold<double>(0, (sum, slice) => sum + slice.value);
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
     final separatorPaint = Paint()
       ..color = const Color(0xFF0F0F10)
       ..strokeWidth = 2;
@@ -1623,11 +1797,17 @@ class _PortfolioPieChartPainter extends CustomPainter {
 
     var startAngle = -math.pi / 2;
 
-    for (final slice in slices) {
+    for (var index = 0; index < slices.length; index++) {
+      final slice = slices[index];
       final sweepAngle = (slice.value / total) * math.pi * 2;
+      final isSelected = selectedIndex == index;
+      final outerRadius = isSelected ? radius + 6 : radius;
+      final rect = Rect.fromCircle(center: center, radius: outerRadius);
       final paint = Paint()
         ..style = PaintingStyle.fill
-        ..color = slice.color;
+        ..color = isSelected
+            ? Color.lerp(slice.color, Colors.white, 0.12) ?? slice.color
+            : slice.color;
       final path = Path()
         ..moveTo(center.dx, center.dy)
         ..arcTo(rect, startAngle, sweepAngle, false)
@@ -1637,8 +1817,8 @@ class _PortfolioPieChartPainter extends CustomPainter {
       canvas.drawLine(
         center,
         Offset(
-          center.dx + math.cos(startAngle) * radius,
-          center.dy + math.sin(startAngle) * radius,
+          center.dx + math.cos(startAngle) * outerRadius,
+          center.dy + math.sin(startAngle) * outerRadius,
         ),
         separatorPaint,
       );
@@ -1652,7 +1832,8 @@ class _PortfolioPieChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PortfolioPieChartPainter oldDelegate) {
-    return oldDelegate.slices != slices;
+    return oldDelegate.slices != slices ||
+        oldDelegate.selectedIndex != selectedIndex;
   }
 }
 

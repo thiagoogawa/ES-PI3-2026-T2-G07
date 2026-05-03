@@ -259,16 +259,21 @@ export const syncBasicUserProfile = async (
 ): Promise<void> => {
   const userRef = getUserDocRef(decodedToken.uid);
 
+  const profileUpdate: Record<string, unknown> = {
+    uid: decodedToken.uid,
+    email: decodedToken.email ?? null,
+    nome: decodedToken.name ?? null,
+    telefone: decodedToken.phone_number ?? null,
+    mfaAtivo: false,
+    updatedAt: FieldValue.serverTimestamp(),
+  };
+
+  if (decodedToken.picture) {
+    profileUpdate.fotoPerfil = decodedToken.picture;
+  }
+
   await userRef.set(
-    {
-      uid: decodedToken.uid,
-      email: decodedToken.email ?? null,
-      nome: decodedToken.name ?? null,
-      telefone: decodedToken.phone_number ?? null,
-      fotoPerfil: decodedToken.picture ?? null,
-      mfaAtivo: false,
-      updatedAt: FieldValue.serverTimestamp(),
-    },
+    profileUpdate,
     {merge: true},
   );
 };
