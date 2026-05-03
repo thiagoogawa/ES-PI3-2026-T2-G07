@@ -37,6 +37,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isDepositing = false;
   bool _isRefreshingProfile = false;
+  bool _isPortfolioBalanceVisible = true;
 
   static const List<Color> _portfolioChartColors = [
     Color(0xFF295AA5),
@@ -495,6 +496,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPortfolioSummary(StartupPortfolioSnapshotModel portfolio) {
+    final wealthLabel = _isPortfolioBalanceVisible
+        ? _formatCurrency(_portfolioWealth(portfolio))
+        : 'R\$ ••••••';
+    final availableBalanceLabel = _isPortfolioBalanceVisible
+        ? _formatCurrency(portfolio.balance)
+        : 'R\$ ••••••';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
@@ -506,17 +514,42 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Patrimonio',
-            style: TextStyle(
-              color: Color(0xFFB7BCC8),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+          Row(
+            children: [
+              const Text(
+                'Patrimonio',
+                style: TextStyle(
+                  color: Color(0xFFB7BCC8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _isPortfolioBalanceVisible = !_isPortfolioBalanceVisible;
+                  });
+                },
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                tooltip: _isPortfolioBalanceVisible
+                    ? 'Ocultar valores'
+                    : 'Mostrar valores',
+                icon: Icon(
+                  _isPortfolioBalanceVisible
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: const Color(0xFFB7BCC8),
+                  size: 18,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           Text(
-            _formatCurrency(_portfolioWealth(portfolio)),
+            wealthLabel,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 26,
@@ -525,7 +558,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Disponivel para investir: ${_formatCurrency(portfolio.balance)}',
+            'Disponivel para investir: $availableBalanceLabel',
             style: const TextStyle(color: Color(0xFFD2D6DE), fontSize: 15),
           ),
           const SizedBox(height: 16),
