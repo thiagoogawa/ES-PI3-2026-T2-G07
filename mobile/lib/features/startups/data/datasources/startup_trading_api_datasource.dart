@@ -29,19 +29,6 @@ class StartupTradingApiDataSource {
     return StartupPortfolioSnapshotModel.fromJson(response);
   }
 
-  Future<StartupPortfolioSnapshotModel> simulateDeposit(
-    String idToken, {
-    required double amount,
-  }) async {
-    final response = await _apiClient.post(
-      ApiConstants.portfolioDeposit,
-      headers: _authHeaders(idToken),
-      body: {'amount': amount},
-    );
-
-    return StartupPortfolioSnapshotModel.fromJson(response);
-  }
-
   Future<StartupTradeResultModel> submitTrade(
     String idToken, {
     required String startupId,

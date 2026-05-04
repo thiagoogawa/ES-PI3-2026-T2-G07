@@ -35,7 +35,6 @@ class _HomePageState extends State<HomePage> {
   Future<StartupPortfolioSnapshotModel>? _portfolioFuture;
   AuthenticatedUser? _currentUser;
   int _selectedIndex = 0;
-  bool _isDepositing = false;
   bool _isRefreshingProfile = false;
   bool _isPortfolioBalanceVisible = true;
 
@@ -168,65 +167,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     await Future.wait([startupsFuture, portfolioFuture]);
-  }
-
-  Future<double?> _openDepositSheet() async {
-    return Navigator.of(context).push<double>(
-      MaterialPageRoute(builder: (_) => const _DepositAmountPage()),
-    );
-  }
-
-  Future<void> _simulateDeposit() async {
-    if (_isDepositing) {
-      return;
-    }
-
-    final amount = await _openDepositSheet();
-    if (amount == null) {
-      return;
-    }
-
-    setState(() {
-      _isDepositing = true;
-    });
-
-    try {
-      final idToken = await _authRemote.getIdToken();
-      final portfolio = await _tradingApi.simulateDeposit(
-        idToken,
-        amount: amount,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _portfolioFuture = Future.value(portfolio);
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Saldo ficticio adicionado: ${_formatCurrency(amount)}.',
-          ),
-        ),
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isDepositing = false;
-        });
-      }
-    }
   }
 
   Future<void> _handleLogout() async {
@@ -431,14 +371,28 @@ class _HomePageState extends State<HomePage> {
   }
 
   double _portfolioWealth(StartupPortfolioSnapshotModel portfolio) {
-    return portfolio.balance +
-        portfolio.reservedBalance +
-        portfolio.currentValue;
+    final holdingsValue = portfolio.positions.fold<double>(
+      0,
+      (sum, position) =>
+          sum +
+          (position.currentValue > 0
+              ? position.currentValue
+              : position.investedAmount),
+    );
+
+    return portfolio.balance + portfolio.reservedBalance + holdingsValue;
   }
 
   void _onDestinationSelected(int index) {
+    if (_selectedIndex == index) {
+      return;
+    }
+
     setState(() {
       _selectedIndex = index;
+      if (index == 0 || index == 3) {
+        _portfolioFuture = _fetchPortfolio();
+      }
     });
   }
 
@@ -446,6 +400,15 @@ class _HomePageState extends State<HomePage> {
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => StartupDetailPage(startup: startup)),
     );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _portfolioFuture = _fetchPortfolio();
+      _startupsFuture = _startupsApiDataSource.fetchStartups();
+    });
   }
 
   Widget _buildHeader() {
@@ -560,39 +523,6 @@ class _HomePageState extends State<HomePage> {
           Text(
             'Disponivel para investir: $availableBalanceLabel',
             style: const TextStyle(color: Color(0xFFD2D6DE), fontSize: 15),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isDepositing ? null : _simulateDeposit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B1D22),
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: const Color(0xFF1B1D22),
-                minimumSize: const Size.fromHeight(46),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              icon: _isDepositing
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.arrow_downward_rounded),
-              label: Text(
-                _isDepositing ? 'Depositando...' : 'Depositar',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
           ),
         ],
       ),
@@ -809,7 +739,20 @@ class _HomePageState extends State<HomePage> {
   Widget _buildPortfolioDistributionSection(
     StartupPortfolioSnapshotModel portfolio,
   ) {
-    final slices = _buildPortfolioSlices(portfolio);
+    final validPositions = portfolio.positions
+        .where((position) => position.quantity > 0)
+        .toList();
+    final slices = _buildPortfolioSlices(
+      StartupPortfolioSnapshotModel(
+        userId: portfolio.userId,
+        balance: portfolio.balance,
+        reservedBalance: portfolio.reservedBalance,
+        totalInvested: portfolio.totalInvested,
+        currentValue: portfolio.currentValue,
+        profitLoss: portfolio.profitLoss,
+        positions: validPositions,
+      ),
+    );
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
@@ -947,13 +890,16 @@ class _HomePageState extends State<HomePage> {
         }
 
         final portfolio = snapshot.data!;
+        final validPositions = portfolio.positions
+            .where((position) => position.quantity > 0)
+            .toList();
 
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             _buildHeader(),
             const SizedBox(height: 28),
-            if (portfolio.positions.isEmpty)
+            if (validPositions.isEmpty)
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -970,8 +916,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-            if (portfolio.positions.isNotEmpty) ...[
-              _buildPortfolioDistributionSection(portfolio),
+            if (validPositions.isNotEmpty) ...[
+              _buildPortfolioDistributionSection(
+                StartupPortfolioSnapshotModel(
+                  userId: portfolio.userId,
+                  balance: portfolio.balance,
+                  reservedBalance: portfolio.reservedBalance,
+                  totalInvested: portfolio.totalInvested,
+                  currentValue: portfolio.currentValue,
+                  profitLoss: portfolio.profitLoss,
+                  positions: validPositions,
+                ),
+              ),
               const SizedBox(height: 22),
               const Text(
                 'Posicoes',
@@ -982,7 +938,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 14),
-              for (final position in portfolio.positions) ...[
+              for (final position in validPositions) ...[
                 _buildPortfolioPositionCard(position),
                 const SizedBox(height: 12),
               ],

@@ -70,6 +70,7 @@ class StartupPortfolioSnapshotModel {
               item as Map<String, dynamic>,
             ),
           )
+          .where((position) => position.quantity > 0)
           .toList(),
     );
   }

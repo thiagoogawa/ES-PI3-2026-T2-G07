@@ -15,10 +15,5 @@ portfolioRouter.get(
   authMiddleware,
   asyncHandler(PortfolioController.getDashboard),
 );
-portfolioRouter.post(
-  "/deposit",
-  authMiddleware,
-  asyncHandler(PortfolioController.simulateDeposit),
-);
 
 export {portfolioRouter};
