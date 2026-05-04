@@ -9,6 +9,7 @@ import '../../../../core/network/api_client.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/datasources/profile_storage_datasource.dart';
 import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/data/datasources/startup_trading_api_datasource.dart';
 import '../../../startups/data/models/startup_portfolio_snapshot_model.dart';
@@ -1838,6 +1839,7 @@ class _EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<_EditProfilePage> {
   final AuthApiDataSource _authApi = AuthApiDataSource(ApiClient());
   final AuthRemoteDataSource _authRemote = AuthRemoteDataSource();
+  final ProfileStorageDataSource _profileStorage = ProfileStorageDataSource();
   final ImagePicker _imagePicker = ImagePicker();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
@@ -1874,6 +1876,42 @@ class _EditProfilePageState extends State<_EditProfilePage> {
     }
 
     return '${digits.substring(0, 3)}.${digits.substring(3, 6)}.${digits.substring(6, 9)}-${digits.substring(9)}';
+  }
+
+  Uint8List? _decodePendingPicture(String? value) {
+    if (value == null || value.trim().isEmpty || value.startsWith('http')) {
+      return null;
+    }
+
+    try {
+      return base64Decode(value.trim());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _resolvePictureForSave() async {
+    final value = _picture?.trim();
+
+    if (value == null) {
+      return null;
+    }
+
+    if (value.isEmpty) {
+      await _profileStorage.deleteUserIcon(uid: widget.user.uid);
+      return '';
+    }
+
+    if (value.startsWith('http')) {
+      return value;
+    }
+
+    final bytes = _decodePendingPicture(value);
+    if (bytes == null) {
+      throw Exception('Imagem de perfil invalida.');
+    }
+
+    return _profileStorage.uploadUserIcon(uid: widget.user.uid, bytes: bytes);
   }
 
   Future<void> _pickProfilePicture() async {
@@ -1934,12 +1972,13 @@ class _EditProfilePageState extends State<_EditProfilePage> {
 
     try {
       final idToken = await _authRemote.getIdToken(forceRefresh: true);
+      final picture = await _resolvePictureForSave();
       final updatedUser = await _authApi.updateProfile(
         idToken,
         name: _nameController.text.trim(),
         cpf: _digitsOnly(_cpfController.text),
         phone: _phoneController.text.trim(),
-        picture: _picture,
+        picture: picture,
       );
 
       if (!mounted) {
