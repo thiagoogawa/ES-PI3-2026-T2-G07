@@ -27,6 +27,7 @@ export interface UserAccount {
   name: string | null;
   cpf: string | null;
   phone: string | null;
+  picture: string | null;
   balance: number;
   reservedBalance: number;
   mfaEnabled: boolean;
@@ -126,6 +127,10 @@ export const normalizeUserAccount = (
     name: readString(source, "nome", "name") ?? fallback.name ?? null,
     cpf: readString(source, "cpf") ?? fallback.cpf ?? null,
     phone: readString(source, "telefone", "phone") ?? fallback.phone ?? null,
+    picture:
+      readString(source, "fotoPerfil", "picture") ??
+      fallback.picture ??
+      null,
     balance: readNumber(
       source,
       ["saldoDisponivel", "balance"],
@@ -153,6 +158,7 @@ const buildDefaultUserDocument = (decodedToken: DecodedIdToken) => {
     nome: decodedToken.name ?? null,
     telefone: decodedToken.phone_number ?? null,
     cpf: null,
+    fotoPerfil: decodedToken.picture ?? null,
     saldoDisponivel: DEFAULT_BALANCE,
     saldoReservado: 0,
     mfaAtivo: false,
@@ -228,6 +234,7 @@ export const getOrCreateUserAccount = async (
     email: decodedToken.email ?? null,
     name: decodedToken.name ?? null,
     phone: decodedToken.phone_number ?? null,
+    picture: decodedToken.picture ?? null,
     balance: DEFAULT_BALANCE,
     reservedBalance: 0,
     mfaEnabled: false,
@@ -252,15 +259,21 @@ export const syncBasicUserProfile = async (
 ): Promise<void> => {
   const userRef = getUserDocRef(decodedToken.uid);
 
+  const profileUpdate: Record<string, unknown> = {
+    uid: decodedToken.uid,
+    email: decodedToken.email ?? null,
+    nome: decodedToken.name ?? null,
+    telefone: decodedToken.phone_number ?? null,
+    mfaAtivo: false,
+    updatedAt: FieldValue.serverTimestamp(),
+  };
+
+  if (decodedToken.picture) {
+    profileUpdate.fotoPerfil = decodedToken.picture;
+  }
+
   await userRef.set(
-    {
-      uid: decodedToken.uid,
-      email: decodedToken.email ?? null,
-      nome: decodedToken.name ?? null,
-      telefone: decodedToken.phone_number ?? null,
-      mfaAtivo: false,
-      updatedAt: FieldValue.serverTimestamp(),
-    },
+    profileUpdate,
     {merge: true},
   );
 };
@@ -283,6 +296,7 @@ interface UpdateUserProfileInput {
   name: string;
   cpf: string;
   phone: string;
+  picture?: string | null;
 }
 
 export const updateUserProfile = async (
@@ -295,6 +309,7 @@ export const updateUserProfile = async (
       nome: input.name,
       cpf: input.cpf,
       telefone: input.phone,
+      fotoPerfil: input.picture ?? null,
       updatedAt: FieldValue.serverTimestamp(),
     },
     {merge: true},

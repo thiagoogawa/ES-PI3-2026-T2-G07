@@ -170,7 +170,7 @@ export class StartupsService {
         };
       }).sort((left, right) => {
         return (right.timestamp ?? "").localeCompare(left.timestamp ?? "");
-      }).slice(0, 30);
+      });
     } catch (_error) {
       return [];
     }

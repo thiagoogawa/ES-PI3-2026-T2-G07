@@ -16,5 +16,10 @@ offersRouter.post(
   authMiddleware,
   asyncHandler(OffersController.accept),
 );
+offersRouter.post(
+  "/:offerId/cancel",
+  authMiddleware,
+  asyncHandler(OffersController.cancel),
+);
 
 export {offersRouter};

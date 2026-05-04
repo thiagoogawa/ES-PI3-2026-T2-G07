@@ -803,4 +803,65 @@ export class OffersService {
 
     return result;
   }
+
+  static async cancel(decodedToken: DecodedIdToken, offerId: string) {
+    return adminDb.runTransaction(async (transaction) => {
+      const offerRef = offersCollection.doc(offerId);
+      const offerSnapshot = await transaction.get(offerRef);
+
+      if (!offerSnapshot.exists) {
+        throw new AppError(
+          "Offer not found",
+          HTTP_STATUS.NOT_FOUND,
+          "OFFER_NOT_FOUND",
+        );
+      }
+
+      const offer = normalizeOffer(offerSnapshot.id, offerSnapshot.data() ?? {});
+
+      if (offer.userId != decodedToken.uid) {
+        throw new ValidationError("You can only cancel your own offer");
+      }
+
+      if (offer.status === "matched" || offer.status === "cancelled") {
+        throw new ValidationError("Offer is no longer available");
+      }
+
+      const userRef = getUserDocRef(decodedToken.uid);
+      const userSnapshot = await transaction.get(userRef);
+
+      if (!userSnapshot.exists) {
+        throw new AppError(
+          "User account not initialized",
+          HTTP_STATUS.CONFLICT,
+          "USER_ACCOUNT_NOT_INITIALIZED",
+        );
+      }
+
+      const account = normalizeUserAccount(
+        decodedToken.uid,
+        userSnapshot.data() ?? {},
+        await getOrCreateUserAccount(decodedToken),
+      );
+
+      if (offer.type === "buy") {
+        const refundValue = offer.remainingQuantity * offer.pricePerToken;
+        transaction.update(userRef, {
+          saldoDisponivel: account.balance + refundValue,
+          saldoReservado: Math.max(account.reservedBalance - refundValue, 0),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      transaction.update(offerRef, {
+        status: "cancelada",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      return {
+        ...offer,
+        status: "cancelled",
+      };
+    });
+  }
 }

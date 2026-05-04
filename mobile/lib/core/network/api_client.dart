@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+
 import '../errors/app_exception.dart';
 
 class ApiClient {
