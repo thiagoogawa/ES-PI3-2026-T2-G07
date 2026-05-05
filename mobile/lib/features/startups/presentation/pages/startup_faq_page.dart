@@ -17,6 +17,7 @@ class StartupFaqPage extends StatefulWidget {
 class _StartupFaqPageState extends State<StartupFaqPage> {
   late final StartupsApiDataSource _startupsApiDataSource;
   late Future<StartupDetail> _faqFuture;
+  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _questionController = TextEditingController();
 
   bool _isSubmittingQuestion = false;
@@ -30,6 +31,7 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _questionController.dispose();
     super.dispose();
   }
@@ -136,9 +138,54 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (_) {
+          setState(() {});
+        },
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: 'Buscar nas perguntas frequentes',
+          hintStyle: const TextStyle(color: Color(0xFF7A808B)),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF8F96A3)),
+          suffixIcon: _searchController.text.isEmpty
+              ? null
+              : IconButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                  icon: const Icon(Icons.close, color: Color(0xFF8F96A3)),
+                ),
+          filled: true,
+          fillColor: const Color(0xFF151618),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF2E323A)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF2E323A)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF4E91F3)),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildComposer() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF151618),
@@ -149,7 +196,7 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'FAQ publico',
+            'Fazer uma pergunta',
             style: TextStyle(
               color: Colors.white,
               fontSize: 14,
@@ -275,6 +322,19 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
           }
 
           final detail = snapshot.data!;
+          final searchTerm = _searchController.text.trim().toLowerCase();
+          final filteredQuestions = detail.questions
+              .where((question) {
+                if (searchTerm.isEmpty) {
+                  return true;
+                }
+
+                return question.question.toLowerCase().contains(searchTerm) ||
+                    (question.answer?.toLowerCase().contains(searchTerm) ??
+                        false);
+              })
+              .take(5)
+              .toList();
 
           return RefreshIndicator(
             onRefresh: _reload,
@@ -282,11 +342,11 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
-                _buildComposer(),
+                _buildSearchBar(),
                 const Padding(
                   padding: EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'Perguntas frequentes',
+                    'Perguntas mais frequentes',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 17,
@@ -294,13 +354,14 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
                     ),
                   ),
                 ),
-                if (detail.questions.isEmpty)
+                if (filteredQuestions.isEmpty)
                   const Text(
-                    'Nenhuma pergunta publicada ainda.',
+                    'Nenhuma pergunta encontrada.',
                     style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 14),
                   )
                 else
-                  ...detail.questions.map(_buildQuestionCard),
+                  ...filteredQuestions.map(_buildQuestionCard),
+                _buildComposer(),
               ],
             ),
           );
