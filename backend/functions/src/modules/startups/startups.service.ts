@@ -1,5 +1,6 @@
 import {adminDb} from "../../config/firebase-admin";
 import {AppError} from "../../core/errors/app-error";
+import {ValidationError} from "../../core/errors/validation-error";
 import {HTTP_STATUS} from "../../core/http/http-status";
 import {
   readNumber,
@@ -150,6 +151,65 @@ export class StartupsService {
       perguntas: questions,
       updates,
       priceHistory,
+    };
+  }
+
+  static async submitQuestion(
+    startupId: string,
+    input: {question?: unknown; authorName?: unknown},
+  ) {
+    const startupRef = startupsCollection.doc(startupId);
+    const startupSnapshot = await startupRef.get();
+
+    if (!startupSnapshot.exists) {
+      throw new AppError(
+        "Startup not found",
+        HTTP_STATUS.NOT_FOUND,
+        "STARTUP_NOT_FOUND",
+      );
+    }
+
+    const question = String(input.question ?? "").trim();
+    const authorName = String(input.authorName ?? "").trim();
+
+    if (!question) {
+      throw new ValidationError("question is required");
+    }
+
+    if (question.length < 8) {
+      throw new ValidationError("question must contain at least 8 characters");
+    }
+
+    if (question.length > 280) {
+      throw new ValidationError("question must contain at most 280 characters");
+    }
+
+    if (authorName.length > 80) {
+      throw new ValidationError("authorName must contain at most 80 characters");
+    }
+
+    const questionRef = startupRef.collection("perguntas").doc();
+    const now = new Date().toISOString();
+
+    await questionRef.set({
+      pergunta: question,
+      resposta: "",
+      publica: true,
+      userId: "anonymous",
+      autorNome: authorName || null,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      id: questionRef.id,
+      pergunta: question,
+      resposta: "",
+      publica: true,
+      userId: "anonymous",
+      autorNome: authorName || null,
+      createdAt: now,
+      updatedAt: now,
     };
   }
 

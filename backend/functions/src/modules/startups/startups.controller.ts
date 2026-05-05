@@ -25,6 +25,20 @@ export class StartupsController {
       .json(successResponse(startup, "Startup fetched successfully"));
   }
 
+  static async submitQuestion(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    const question = await StartupsService.submitQuestion(
+      request.params.startupId,
+      request.body ?? {},
+    );
+
+    response
+      .status(HTTP_STATUS.CREATED)
+      .json(successResponse(question, "Question submitted successfully"));
+  }
+
   static async trade(request: Request, response: Response): Promise<void> {
     if (!request.user) {
       throw new AuthError();

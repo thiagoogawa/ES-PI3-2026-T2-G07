@@ -49,6 +49,12 @@ class ApiConstants {
   /// [startupId] - Unique identifier of the startup.
   static String startupTrade(String startupId) => '$startups/$startupId/trade';
 
+  /// Returns the endpoint to submit a public question for a startup FAQ.
+  ///
+  /// [startupId] - Unique identifier of the startup.
+  static String startupQuestions(String startupId) =>
+      '$startups/$startupId/questions';
+
   /// Returns the endpoint to accept an offer.
   ///
   /// [offerId] - Unique identifier of the offer.

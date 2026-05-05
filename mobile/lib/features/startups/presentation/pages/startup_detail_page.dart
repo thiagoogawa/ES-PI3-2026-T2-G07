@@ -10,6 +10,7 @@ import '../../data/models/startup_offer_model.dart';
 import '../../data/models/startup_portfolio_snapshot_model.dart';
 import '../../domain/entities/startup.dart';
 import '../../domain/entities/startup_detail.dart';
+import 'startup_faq_page.dart';
 
 class StartupDetailPage extends StatefulWidget {
   final Startup startup;
@@ -65,6 +66,20 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     }
 
     await future;
+  }
+
+  Future<void> _openFaqPage() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StartupFaqPage(startup: widget.startup),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _reload();
   }
 
   String _formatCurrency(double value) {
@@ -1393,49 +1408,6 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                     ),
                   ),
                 ),
-          const SizedBox(height: 18),
-          _buildSectionTitle('Perguntas frequentes'),
-          if (detail.questions.isEmpty)
-            const Text(
-              'Sem perguntas cadastradas.',
-              style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 14),
-            )
-          else
-            ...detail.questions.map(
-              (question) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF151618),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF2E323A)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      question.question,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      question.answer?.isNotEmpty == true
-                          ? question.answer!
-                          : 'Sem resposta publicada ainda.',
-                      style: const TextStyle(
-                        color: Color(0xFFE6E8EE),
-                        fontSize: 12,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -1449,6 +1421,21 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
         backgroundColor: const Color(0xFF0F0F10),
         foregroundColor: Colors.white,
         title: Text(widget.startup.name),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            color: const Color(0xFF151618),
+            surfaceTintColor: const Color(0xFF151618),
+            onSelected: (value) {
+              if (value == 'faq') {
+                _openFaqPage();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem<String>(value: 'faq', child: Text('Abrir FAQ')),
+            ],
+          ),
+        ],
       ),
       body: FutureBuilder<_StartupDetailViewData>(
         future: _screenFuture,

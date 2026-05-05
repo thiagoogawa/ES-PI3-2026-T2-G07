@@ -23,4 +23,15 @@ class StartupsApiDataSource {
     );
     return StartupDetailModel.fromJson(response);
   }
+
+  Future<void> submitQuestion(
+    String startupId, {
+    required String question,
+  }) async {
+    await _apiClient.post(
+      ApiConstants.startupQuestions(startupId),
+      headers: const {'Content-Type': 'application/json'},
+      body: {'question': question},
+    );
+  }
 }
