@@ -5,7 +5,7 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../controllers/auth_controller.dart';
-import 'home_page.dart';
+import 'app_home_router.dart';
 import 'reset_password_page.dart';
 import 'signup_flow_page.dart';
 
@@ -37,7 +37,9 @@ class _LoginPageState extends State<LoginPage> {
       if (controller.currentUser != null && mounted) {
         final authenticatedUser = controller.currentUser as AuthenticatedUser;
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomePage(user: authenticatedUser)),
+          MaterialPageRoute(
+            builder: (_) => buildHomePageForUser(authenticatedUser),
+          ),
         );
       }
 

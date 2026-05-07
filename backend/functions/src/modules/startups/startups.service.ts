@@ -1,6 +1,10 @@
 import {adminDb} from "../../config/firebase-admin";
 import {AppError} from "../../core/errors/app-error";
+import {AuthError} from "../../core/errors/auth-error";
+import {ValidationError} from "../../core/errors/validation-error";
 import {HTTP_STATUS} from "../../core/http/http-status";
+import {DecodedIdToken} from "firebase-admin/auth";
+import {FieldValue} from "firebase-admin/firestore";
 import {
   readNumber,
   readRecord,
@@ -106,6 +110,23 @@ export class StartupsService {
       .sort((left, right) => left.name.localeCompare(right.name));
   }
 
+  static async listManagedByUser(userId: string) {
+    const [adminUidSnapshot, adminSnapshot] = await Promise.all([
+      startupsCollection.where("adminUid", "==", userId).get(),
+      startupsCollection.where("admin.uid", "==", userId).get(),
+    ]);
+
+    const uniqueDocs = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
+
+    [...adminUidSnapshot.docs, ...adminSnapshot.docs].forEach((doc) => {
+      uniqueDocs.set(doc.id, doc);
+    });
+
+    return Array.from(uniqueDocs.values())
+      .map((doc) => normalizeStartup(doc.id, doc.data()))
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }
+
   static async getById(startupId: string) {
     const startupRef = startupsCollection.doc(startupId);
     const startupSnapshot = await startupRef.get();
@@ -150,6 +171,123 @@ export class StartupsService {
       perguntas: questions,
       updates,
       priceHistory,
+    };
+  }
+
+  static async updateStartup(
+    startupId: string,
+    user: DecodedIdToken,
+    input: Record<string, unknown>,
+  ) {
+    const startupRef = await StartupsService.assertAdminAccess(startupId, user);
+    const payload = StartupsService.buildStartupUpdatePayload(input);
+
+    await startupRef.set(
+      {
+        ...payload,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+
+    return StartupsService.getById(startupId);
+  }
+
+  static async answerQuestion(
+    startupId: string,
+    questionId: string,
+    user: DecodedIdToken,
+    input: Record<string, unknown>,
+  ) {
+    const startupRef = await StartupsService.assertAdminAccess(startupId, user);
+    const questionRef = startupRef.collection("perguntas").doc(questionId);
+    const questionSnapshot = await questionRef.get();
+
+    if (!questionSnapshot.exists) {
+      throw new AppError(
+        "Question not found",
+        HTTP_STATUS.NOT_FOUND,
+        "QUESTION_NOT_FOUND",
+      );
+    }
+
+    const answer = String(input.answer ?? "").trim();
+    if (!answer) {
+      throw new ValidationError("answer is required");
+    }
+
+    if (answer.length > 1000) {
+      throw new ValidationError("answer must contain at most 1000 characters");
+    }
+
+    await questionRef.set(
+      {
+        resposta: answer,
+        publica: true,
+        updatedAt: new Date().toISOString(),
+      },
+      {merge: true},
+    );
+
+    return StartupsService.getById(startupId);
+  }
+
+  static async submitQuestion(
+    startupId: string,
+    input: {question?: unknown; authorName?: unknown},
+  ) {
+    const startupRef = startupsCollection.doc(startupId);
+    const startupSnapshot = await startupRef.get();
+
+    if (!startupSnapshot.exists) {
+      throw new AppError(
+        "Startup not found",
+        HTTP_STATUS.NOT_FOUND,
+        "STARTUP_NOT_FOUND",
+      );
+    }
+
+    const question = String(input.question ?? "").trim();
+    const authorName = String(input.authorName ?? "").trim();
+
+    if (!question) {
+      throw new ValidationError("question is required");
+    }
+
+    if (question.length < 8) {
+      throw new ValidationError("question must contain at least 8 characters");
+    }
+
+    if (question.length > 280) {
+      throw new ValidationError("question must contain at most 280 characters");
+    }
+
+    if (authorName.length > 80) {
+      throw new ValidationError("authorName must contain at most 80 characters");
+    }
+
+    const questionRef = startupRef.collection("perguntas").doc();
+    const now = new Date().toISOString();
+
+    await questionRef.set({
+      pergunta: question,
+      resposta: "",
+      publica: true,
+      userId: "anonymous",
+      autorNome: authorName || null,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      id: questionRef.id,
+      pergunta: question,
+      resposta: "",
+      publica: true,
+      userId: "anonymous",
+      autorNome: authorName || null,
+      createdAt: now,
+      updatedAt: now,
     };
   }
 
@@ -239,5 +377,84 @@ export class StartupsService {
     } catch (_error) {
       return [];
     }
+  }
+
+  private static buildStartupUpdatePayload(input: Record<string, unknown>) {
+    const name = String(input.name ?? "").trim();
+    const description = String(input.description ?? "").trim();
+    const stage = String(input.stage ?? "").trim();
+    const sector = String(input.sector ?? "").trim();
+    const executiveSummary = String(input.executiveSummary ?? "").trim();
+    const businessPlanUrl = String(input.businessPlanUrl ?? "").trim();
+    const pitchDeckUrl = String(input.pitchDeckUrl ?? "").trim();
+    const mentors = StartupsService.toStringList(input.mentors);
+    const boardMembers = StartupsService.toStringList(input.boardMembers);
+    const videos = StartupsService.toStringList(input.videos);
+
+    if (!name) {
+      throw new ValidationError("name is required");
+    }
+
+    if (!description) {
+      throw new ValidationError("description is required");
+    }
+
+    if (!stage) {
+      throw new ValidationError("stage is required");
+    }
+
+    return {
+      nome: name,
+      descricao: description,
+      estagio: stage,
+      setor: sector || null,
+      sumarioExecutivo: executiveSummary,
+      planoNegociosUrl: businessPlanUrl || null,
+      pitchDeckUrl: pitchDeckUrl || null,
+      mentores: mentors,
+      conselho: boardMembers,
+      videos,
+    };
+  }
+
+  private static toStringList(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  private static async assertAdminAccess(
+    startupId: string,
+    user: DecodedIdToken,
+  ) {
+    const startupRef = startupsCollection.doc(startupId);
+    const startupSnapshot = await startupRef.get();
+
+    if (!startupSnapshot.exists) {
+      throw new AppError(
+        "Startup not found",
+        HTTP_STATUS.NOT_FOUND,
+        "STARTUP_NOT_FOUND",
+      );
+    }
+
+    const source = startupSnapshot.data() ?? {};
+    const adminUid = readString(source, "adminUid");
+    const admin = readRecord(source, "admin");
+    const nestedAdminUid = admin ? readString(admin, "uid") : null;
+
+    if (adminUid !== user.uid && nestedAdminUid !== user.uid) {
+      throw new AuthError(
+        "User is not allowed to manage this startup",
+        "STARTUP_ADMIN_REQUIRED",
+      );
+    }
+
+    return startupRef;
   }
 }
