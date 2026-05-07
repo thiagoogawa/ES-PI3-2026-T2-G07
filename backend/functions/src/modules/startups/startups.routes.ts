@@ -7,9 +7,19 @@ const startupsRouter = Router();
 
 startupsRouter.get("/", asyncHandler(StartupsController.list));
 startupsRouter.get("/:startupId", asyncHandler(StartupsController.getById));
+startupsRouter.patch(
+  "/:startupId",
+  authMiddleware,
+  asyncHandler(StartupsController.updateStartup),
+);
 startupsRouter.post(
   "/:startupId/questions",
   asyncHandler(StartupsController.submitQuestion),
+);
+startupsRouter.patch(
+  "/:startupId/questions/:questionId/answer",
+  authMiddleware,
+  asyncHandler(StartupsController.answerQuestion),
 );
 startupsRouter.post(
   "/:startupId/trade",

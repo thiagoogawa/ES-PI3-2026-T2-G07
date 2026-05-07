@@ -6,7 +6,7 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../controllers/auth_controller.dart';
-import 'home_page.dart';
+import 'app_home_router.dart';
 
 class SignupFlowPage extends StatefulWidget {
   const SignupFlowPage({super.key});
@@ -41,7 +41,9 @@ class _SignupFlowPageState extends State<SignupFlowPage> {
       if (controller.currentUser != null && mounted) {
         final authenticatedUser = controller.currentUser as AuthenticatedUser;
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => HomePage(user: authenticatedUser)),
+          MaterialPageRoute(
+            builder: (_) => buildHomePageForUser(authenticatedUser),
+          ),
           (route) => false,
         );
       }

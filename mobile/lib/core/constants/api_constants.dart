@@ -55,6 +55,13 @@ class ApiConstants {
   static String startupQuestions(String startupId) =>
       '$startups/$startupId/questions';
 
+  /// Returns the endpoint to update a startup managed by an admin.
+  static String startupAdminUpdate(String startupId) => '$startups/$startupId';
+
+  /// Returns the endpoint to answer an FAQ question as startup admin.
+  static String startupAnswerQuestion(String startupId, String questionId) =>
+      '$startups/$startupId/questions/$questionId/answer';
+
   /// Returns the endpoint to accept an offer.
   ///
   /// [offerId] - Unique identifier of the offer.

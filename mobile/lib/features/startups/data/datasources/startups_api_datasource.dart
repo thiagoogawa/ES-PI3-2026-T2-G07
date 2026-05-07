@@ -34,4 +34,59 @@ class StartupsApiDataSource {
       body: {'question': question},
     );
   }
+
+  Future<StartupDetailModel> updateStartup(
+    String idToken, {
+    required String startupId,
+    required String name,
+    required String description,
+    required String stage,
+    String? sector,
+    required String executiveSummary,
+    String? businessPlanUrl,
+    String? pitchDeckUrl,
+    required List<String> mentors,
+    required List<String> boardMembers,
+    required List<String> videos,
+  }) async {
+    final response = await _apiClient.patch(
+      ApiConstants.startupAdminUpdate(startupId),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body: {
+        'name': name,
+        'description': description,
+        'stage': stage,
+        'sector': sector,
+        'executiveSummary': executiveSummary,
+        'businessPlanUrl': businessPlanUrl,
+        'pitchDeckUrl': pitchDeckUrl,
+        'mentors': mentors,
+        'boardMembers': boardMembers,
+        'videos': videos,
+      },
+    );
+
+    return StartupDetailModel.fromJson(response);
+  }
+
+  Future<StartupDetailModel> answerQuestion(
+    String idToken, {
+    required String startupId,
+    required String questionId,
+    required String answer,
+  }) async {
+    final response = await _apiClient.patch(
+      ApiConstants.startupAnswerQuestion(startupId, questionId),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body: {'answer': answer},
+    );
+
+    return StartupDetailModel.fromJson(response);
+  }
 }

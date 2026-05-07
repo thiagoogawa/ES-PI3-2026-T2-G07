@@ -8,6 +8,7 @@ import {
   syncBasicUserProfile,
   updateUserProfile,
 } from "../users/user-account.service";
+import {StartupsService} from "../startups/startups.service";
 
 /**
  * Service with Firebase Auth token operations.
@@ -40,6 +41,14 @@ export class AuthService {
   static async buildWhoAmI(decodedToken: DecodedIdToken) {
     await syncBasicUserProfile(decodedToken);
     const account = await getOrCreateUserAccount(decodedToken);
+    const managedStartups = await StartupsService.listManagedByUser(
+      decodedToken.uid,
+    );
+    const roles = new Set(account.roles);
+
+    if (managedStartups.length > 0) {
+      roles.add("startupAdmin");
+    }
 
     return {
       uid: decodedToken.uid,
@@ -50,6 +59,8 @@ export class AuthService {
       phone: account.phone,
       picture: account.picture ?? decodedToken.picture ?? null,
       provider: decodedToken.firebase?.sign_in_provider ?? null,
+      roles: Array.from(roles),
+      managedStartups,
       account: {
         balance: account.balance,
         reservedBalance: account.reservedBalance,
@@ -92,6 +103,14 @@ export class AuthService {
       ...decodedToken,
       name,
     });
+    const managedStartups = await StartupsService.listManagedByUser(
+      decodedToken.uid,
+    );
+    const roles = new Set(account.roles);
+
+    if (managedStartups.length > 0) {
+      roles.add("startupAdmin");
+    }
 
     return {
       uid: decodedToken.uid,
@@ -102,6 +121,8 @@ export class AuthService {
       phone: account.phone,
       picture: account.picture ?? decodedToken.picture ?? null,
       provider: decodedToken.firebase?.sign_in_provider ?? null,
+      roles: Array.from(roles),
+      managedStartups,
       account: {
         balance: account.balance,
         reservedBalance: account.reservedBalance,

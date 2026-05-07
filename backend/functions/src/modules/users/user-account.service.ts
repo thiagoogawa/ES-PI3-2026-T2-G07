@@ -28,6 +28,7 @@ export interface UserAccount {
   cpf: string | null;
   phone: string | null;
   picture: string | null;
+  roles: string[];
   balance: number;
   reservedBalance: number;
   mfaEnabled: boolean;
@@ -131,6 +132,7 @@ export const normalizeUserAccount = (
       readString(source, "fotoPerfil", "picture") ??
       fallback.picture ??
       null,
+    roles: normalizeRoles(source, fallback.roles),
     balance: readNumber(
       source,
       ["saldoDisponivel", "balance"],
@@ -149,6 +151,22 @@ export const normalizeUserAccount = (
     createdAt: toIsoDate(source.createdAt) ?? fallback.createdAt ?? null,
     updatedAt: toIsoDate(source.updatedAt) ?? fallback.updatedAt ?? null,
   };
+};
+
+const normalizeRoles = (
+  source: Record<string, unknown>,
+  fallback?: string[],
+): string[] => {
+  const roles = new Set<String>(fallback ?? []);
+  const roleMap = readRecord(source, "papeis", "roles") ?? {};
+
+  Object.entries(roleMap).forEach(([key, value]) => {
+    if (value === true) {
+      roles.add(key);
+    }
+  });
+
+  return Array.from(roles).map((role) => role.toString());
 };
 
 const buildDefaultUserDocument = (decodedToken: DecodedIdToken) => {
@@ -235,6 +253,7 @@ export const getOrCreateUserAccount = async (
     name: decodedToken.name ?? null,
     phone: decodedToken.phone_number ?? null,
     picture: decodedToken.picture ?? null,
+    roles: [],
     balance: DEFAULT_BALANCE,
     reservedBalance: 0,
     mfaEnabled: false,

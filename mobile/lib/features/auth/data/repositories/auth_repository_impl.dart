@@ -9,14 +9,26 @@ class AuthRepositoryImpl implements AuthRepository {
 
   AuthRepositoryImpl(this._authRemoteDataSource, this._authApiDataSource);
 
+  Future<AuthenticatedUser> _fetchAuthenticatedUser({
+    bool forceRefresh = false,
+  }) async {
+    final idToken = await _authRemoteDataSource.getIdToken(
+      forceRefresh: forceRefresh,
+    );
+    return _authApiDataSource.fetchMe(idToken);
+  }
+
   @override
   Future<AuthenticatedUser?> getCurrentUser() async {
     if (!_authRemoteDataSource.isSignedIn) {
       return null;
     }
 
-    final idToken = await _authRemoteDataSource.getIdToken();
-    return _authApiDataSource.fetchMe(idToken);
+    try {
+      return await _fetchAuthenticatedUser();
+    } catch (_) {
+      return _fetchAuthenticatedUser(forceRefresh: true);
+    }
   }
 
   @override
@@ -26,8 +38,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     await _authRemoteDataSource.signIn(email: email, password: password);
 
-    final idToken = await _authRemoteDataSource.getIdToken();
-    return _authApiDataSource.fetchMe(idToken);
+    try {
+      return await _fetchAuthenticatedUser();
+    } catch (_) {
+      try {
+        return await _fetchAuthenticatedUser(forceRefresh: true);
+      } catch (error) {
+        await _authRemoteDataSource.signOut();
+        rethrow;
+      }
+    }
   }
 
   @override
@@ -44,13 +64,39 @@ class AuthRepositoryImpl implements AuthRepository {
       fullName: fullName,
     );
 
-    final idToken = await _authRemoteDataSource.getIdToken(forceRefresh: true);
-    return _authApiDataSource.updateProfile(
-      idToken,
-      name: fullName,
-      cpf: cpf,
-      phone: phone,
-    );
+    try {
+      final idToken = await _authRemoteDataSource.getIdToken(
+        forceRefresh: true,
+      );
+      return await _authApiDataSource.updateProfile(
+        idToken,
+        name: fullName,
+        cpf: cpf,
+        phone: phone,
+      );
+    } catch (_) {
+      try {
+        final retryIdToken = await _authRemoteDataSource.getIdToken(
+          forceRefresh: true,
+        );
+        return await _authApiDataSource.updateProfile(
+          retryIdToken,
+          name: fullName,
+          cpf: cpf,
+          phone: phone,
+        );
+      } catch (error) {
+        try {
+          await _authRemoteDataSource.deleteCurrentUser();
+        } catch (_) {
+          await _authRemoteDataSource.signOut();
+        }
+
+        throw Exception(
+          'Nao foi possivel finalizar o cadastro no servidor. A conta parcial foi revertida; tente novamente.',
+        );
+      }
+    }
   }
 
   @override

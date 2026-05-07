@@ -39,6 +39,45 @@ export class StartupsController {
       .json(successResponse(question, "Question submitted successfully"));
   }
 
+  static async updateStartup(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const startup = await StartupsService.updateStartup(
+      request.params.startupId,
+      request.user,
+      request.body ?? {},
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(startup, "Startup updated successfully"));
+  }
+
+  static async answerQuestion(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const startup = await StartupsService.answerQuestion(
+      request.params.startupId,
+      request.params.questionId,
+      request.user,
+      request.body ?? {},
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(startup, "Question answered successfully"));
+  }
+
   static async trade(request: Request, response: Response): Promise<void> {
     if (!request.user) {
       throw new AuthError();

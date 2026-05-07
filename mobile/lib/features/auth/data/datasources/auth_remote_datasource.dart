@@ -55,6 +55,15 @@ class AuthRemoteDataSource {
     return _firebaseAuth.signOut();
   }
 
+  Future<void> deleteCurrentUser() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    await user.delete();
+  }
+
   Future<void> sendPasswordResetEmail({required String email}) {
     return _firebaseAuth.sendPasswordResetEmail(
       email: email,
