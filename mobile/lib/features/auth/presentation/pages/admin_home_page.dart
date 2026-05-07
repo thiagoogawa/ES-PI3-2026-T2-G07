@@ -5,12 +5,14 @@ import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/domain/entities/startup_detail.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../domain/entities/authenticated_user.dart';
+import 'admin_startup_selection_page.dart';
 import 'login_page.dart';
 
 class AdminHomePage extends StatefulWidget {
   final AuthenticatedUser user;
+  final ManagedStartup startup;
 
-  const AdminHomePage({super.key, required this.user});
+  const AdminHomePage({super.key, required this.user, required this.startup});
 
   @override
   State<AdminHomePage> createState() => _AdminHomePageState();
@@ -19,7 +21,7 @@ class AdminHomePage extends StatefulWidget {
 class _AdminHomePageState extends State<AdminHomePage> {
   late final StartupsApiDataSource _startupsApiDataSource;
   late final AuthRemoteDataSource _authRemoteDataSource;
-  late String? _selectedStartupId;
+  late String _selectedStartupId;
   late Future<StartupDetail?> _startupFuture;
   int _selectedIndex = 0;
   bool _isSavingStartup = false;
@@ -29,19 +31,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
     super.initState();
     _startupsApiDataSource = StartupsApiDataSource(ApiClient());
     _authRemoteDataSource = AuthRemoteDataSource();
-    _selectedStartupId = widget.user.managedStartups.isEmpty
-        ? null
-        : widget.user.managedStartups.first.id;
+    _selectedStartupId = widget.startup.id;
     _startupFuture = _loadSelectedStartup();
   }
 
   Future<StartupDetail?> _loadSelectedStartup() async {
-    final startupId = _selectedStartupId;
-    if (startupId == null || startupId.isEmpty) {
+    if (_selectedStartupId.isEmpty) {
       return null;
     }
 
-    return _startupsApiDataSource.fetchStartupDetail(startupId);
+    return _startupsApiDataSource.fetchStartupDetail(_selectedStartupId);
   }
 
   Future<void> _reloadSelectedStartup() async {
@@ -54,8 +53,20 @@ class _AdminHomePageState extends State<AdminHomePage> {
     await future;
   }
 
+  Future<void> _chooseAnotherStartup() async {
+    if (!mounted) {
+      return;
+    }
+
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => AdminStartupSelectionPage(user: widget.user),
+      ),
+    );
+  }
+
   Future<void> _updateStartup(_StartupAdminDraft draft) async {
-    if (_isSavingStartup || _selectedStartupId == null) {
+    if (_isSavingStartup) {
       return;
     }
 
@@ -67,7 +78,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       final idToken = await _authRemoteDataSource.getIdToken();
       final updatedDetail = await _startupsApiDataSource.updateStartup(
         idToken,
-        startupId: _selectedStartupId!,
+        startupId: _selectedStartupId,
         name: draft.name,
         description: draft.description,
         stage: draft.stage,
@@ -104,15 +115,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Future<void> _answerQuestion(String questionId, String answer) async {
-    if (_selectedStartupId == null) {
-      return;
-    }
-
     try {
       final idToken = await _authRemoteDataSource.getIdToken();
       final updatedDetail = await _startupsApiDataSource.answerQuestion(
         idToken,
-        startupId: _selectedStartupId!,
+        startupId: _selectedStartupId,
         questionId: questionId,
         answer: answer,
       );
@@ -155,15 +162,18 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final managedStartups = widget.user.managedStartups;
-
     return Scaffold(
       backgroundColor: const Color(0xFF0F1115),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F1115),
         foregroundColor: Colors.white,
-        title: const Text('Painel da startup'),
+        title: Text(widget.startup.name),
         actions: [
+          IconButton(
+            onPressed: _chooseAnotherStartup,
+            icon: const Icon(Icons.storefront_outlined),
+            tooltip: 'Escolher startup',
+          ),
           IconButton(
             onPressed: _signOut,
             icon: const Icon(Icons.logout_rounded),
@@ -191,93 +201,77 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
         ],
       ),
-      body: managedStartups.isEmpty
-          ? _buildEmptyState()
-          : FutureBuilder<StartupDetail?>(
-              future: _startupFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF2E7DFF)),
-                  );
-                }
+      body: FutureBuilder<StartupDetail?>(
+        future: _startupFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF2E7DFF)),
+            );
+          }
 
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Nao foi possivel carregar a startup administrada.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '${snapshot.error}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Color(0xFFB7BCC8)),
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: _reloadSelectedStartup,
-                            child: const Text('Tentar novamente'),
-                          ),
-                        ],
-                      ),
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Nao foi possivel carregar a startup administrada.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
-                  );
-                }
+                    const SizedBox(height: 12),
+                    Text(
+                      '${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFB7BCC8)),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _reloadSelectedStartup,
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
-                final detail = snapshot.data;
-                if (detail == null) {
-                  return _buildEmptyState();
-                }
+          final detail = snapshot.data;
+          if (detail == null) {
+            return _buildEmptyState();
+          }
 
-                return RefreshIndicator(
-                  onRefresh: _reloadSelectedStartup,
-                  color: const Color(0xFF2E7DFF),
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    children: [
-                      _AdminStartupHeader(
-                        user: widget.user,
-                        startups: managedStartups,
-                        selectedStartupId: _selectedStartupId!,
-                        onStartupSelected: (startupId) {
-                          if (startupId == _selectedStartupId) {
-                            return;
-                          }
-
-                          setState(() {
-                            _selectedStartupId = startupId;
-                            _startupFuture = _loadSelectedStartup();
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      if (_selectedIndex == 0)
-                        _StartupEditTab(
-                          key: ValueKey(
-                            '${detail.id}-${detail.name}-${detail.executiveSummary}',
-                          ),
-                          detail: detail,
-                          isSaving: _isSavingStartup,
-                          onSubmit: _updateStartup,
-                        )
-                      else
-                        _StartupFaqMessagesTab(
-                          detail: detail,
-                          onAnswer: _answerQuestion,
-                        ),
-                    ],
+          return RefreshIndicator(
+            onRefresh: _reloadSelectedStartup,
+            color: const Color(0xFF2E7DFF),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              children: [
+                _AdminStartupHeader(user: widget.user),
+                const SizedBox(height: 20),
+                if (_selectedIndex == 0)
+                  _StartupEditTab(
+                    key: ValueKey(
+                      '${detail.id}-${detail.name}-${detail.executiveSummary}',
+                    ),
+                    detail: detail,
+                    isSaving: _isSavingStartup,
+                    onSubmit: _updateStartup,
+                  )
+                else
+                  _StartupFaqMessagesTab(
+                    detail: detail,
+                    onAnswer: _answerQuestion,
                   ),
-                );
-              },
+              ],
             ),
+          );
+        },
+      ),
     );
   }
 
@@ -310,16 +304,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
 class _AdminStartupHeader extends StatelessWidget {
   final AuthenticatedUser user;
-  final List<ManagedStartup> startups;
-  final String selectedStartupId;
-  final ValueChanged<String> onStartupSelected;
 
-  const _AdminStartupHeader({
-    required this.user,
-    required this.startups,
-    required this.selectedStartupId,
-    required this.onStartupSelected,
-  });
+  const _AdminStartupHeader({required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -348,41 +334,6 @@ class _AdminStartupHeader extends StatelessWidget {
           const Text(
             'Gerencie os dados da startup e responda as perguntas publicadas no FAQ.',
             style: TextStyle(color: Color(0xFFDCEAFF), height: 1.5),
-          ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<String>(
-            key: ValueKey(selectedStartupId),
-            initialValue: selectedStartupId,
-            onChanged: (value) {
-              if (value != null) {
-                onStartupSelected(value);
-              }
-            },
-            dropdownColor: const Color(0xFF12335D),
-            iconEnabledColor: Colors.white,
-            decoration: InputDecoration(
-              labelText: 'Startup selecionada',
-              labelStyle: const TextStyle(color: Color(0xFFDCEAFF)),
-              filled: true,
-              fillColor: const Color(0x2210161C),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0x55DCEAFF)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Colors.white),
-              ),
-            ),
-            style: const TextStyle(color: Colors.white),
-            items: startups
-                .map(
-                  (startup) => DropdownMenuItem<String>(
-                    value: startup.id,
-                    child: Text(startup.name),
-                  ),
-                )
-                .toList(),
           ),
         ],
       ),
@@ -616,6 +567,20 @@ class _StartupFaqMessagesTab extends StatefulWidget {
 
 class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
   String? _answeringQuestionId;
+  String? _editingQuestionId;
+  late final TextEditingController _answerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _answerController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _answerController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -658,6 +623,7 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
           ...questions.map((question) {
             final hasAnswer = question.answer?.trim().isNotEmpty ?? false;
             final isBusy = _answeringQuestionId == question.id;
+            final isEditing = _editingQuestionId == question.id;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -714,12 +680,42 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    if (isEditing) ...[
+                      _AdminTextField(
+                        controller: _answerController,
+                        label: 'Resposta',
+                        maxLines: 6,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: isBusy ? null : _cancelEditing,
+                              child: const Text('Cancelar'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: isBusy
+                                  ? null
+                                  : () => _submitAnswer(question),
+                              child: Text(
+                                isBusy ? 'Publicando...' : 'Publicar resposta',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: isBusy
                             ? null
-                            : () => _openAnswerSheet(question),
+                            : () => _startEditing(question),
                         icon: isBusy
                             ? const SizedBox(
                                 width: 16,
@@ -731,7 +727,11 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
                               )
                             : const Icon(Icons.reply_rounded),
                         label: Text(
-                          hasAnswer ? 'Editar resposta' : 'Responder',
+                          isEditing
+                              ? 'Editando resposta'
+                              : hasAnswer
+                              ? 'Editar resposta'
+                              : 'Responder',
                         ),
                       ),
                     ),
@@ -744,66 +744,22 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
     );
   }
 
-  Future<void> _openAnswerSheet(StartupQuestion question) async {
-    final controller = TextEditingController(text: question.answer ?? '');
-    String? answer = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF15181E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            20,
-            20,
-            MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Responder pergunta',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                question.question,
-                style: const TextStyle(color: Color(0xFFB7BCC8), height: 1.5),
-              ),
-              const SizedBox(height: 16),
-              _AdminTextField(
-                controller: controller,
-                label: 'Resposta',
-                maxLines: 6,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.of(context).pop(controller.text),
-                  child: const Text('Publicar resposta'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    controller.dispose();
+  void _startEditing(StartupQuestion question) {
+    setState(() {
+      _editingQuestionId = question.id;
+      _answerController.text = question.answer ?? '';
+    });
+  }
 
-    if (!mounted || answer == null) {
-      return;
-    }
+  void _cancelEditing() {
+    setState(() {
+      _editingQuestionId = null;
+      _answerController.clear();
+    });
+  }
 
-    answer = answer.trim();
+  Future<void> _submitAnswer(StartupQuestion question) async {
+    final answer = _answerController.text.trim();
     if (answer.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Digite uma resposta antes de publicar.')),
@@ -817,6 +773,12 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
 
     try {
       await widget.onAnswer(question.id, answer);
+      if (mounted) {
+        setState(() {
+          _editingQuestionId = null;
+          _answerController.clear();
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
