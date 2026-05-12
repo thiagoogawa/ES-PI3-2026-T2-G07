@@ -58,6 +58,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
       return;
     }
 
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
+
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => AdminStartupSelectionPage(user: widget.user),
