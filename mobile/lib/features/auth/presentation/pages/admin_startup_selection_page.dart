@@ -28,9 +28,10 @@ class AdminStartupSelectionPage extends StatelessWidget {
     final startups = user.managedStartups;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: const Color(0xFF09111F),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         foregroundColor: Colors.white,
         title: const Text('Selecionar startup'),
         actions: [
@@ -43,32 +44,47 @@ class AdminStartupSelectionPage extends StatelessWidget {
       ),
       body: startups.isEmpty
           ? const _AdminSelectionEmptyState()
-          : Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: _StartupSelectionCard(user: user, startups: startups),
+          : Stack(
+              children: [
+                const _SelectionBackground(),
+                Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _AdminWelcomeCard(user: user),
+                          const SizedBox(height: 18),
+                          _StartupListCard(user: user, startups: startups),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
     );
   }
 }
 
-class _StartupSelectionCard extends StatelessWidget {
+class _AdminWelcomeCard extends StatelessWidget {
   final AuthenticatedUser user;
-  final List<ManagedStartup> startups;
 
-  const _StartupSelectionCard({required this.user, required this.startups});
+  const _AdminWelcomeCard({required this.user});
 
   @override
   Widget build(BuildContext context) {
+    final displayName = user.name?.trim().isNotEmpty == true
+        ? user.name!.trim()
+        : 'Administrador';
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF12335D), Color(0xFF1D6DC8)],
+          colors: [Color(0xFF102746), Color(0xFF25579D), Color(0xFF2E7DDE)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -85,20 +101,60 @@ class _StartupSelectionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ola, ${user.name ?? 'Admin'}',
+            'Ola, $displayName',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: 23,
+              fontWeight: FontWeight.w800,
+              height: 1.05,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StartupListCard extends StatelessWidget {
+  final AuthenticatedUser user;
+  final List<ManagedStartup> startups;
+
+  const _StartupListCard({required this.user, required this.startups});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xCC101A2B),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x24000000),
+            blurRadius: 24,
+            offset: Offset(0, 14),
+          ),
+        ],
+        border: Border.all(color: const Color(0xFF243145)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Startups administradas',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           const Text(
-            'Escolha qual startup voce quer administrar.',
+            'Acesse rapidamente o painel da startup que deseja atualizar agora.',
             style: TextStyle(
-              color: Color(0xFFDCEAFF),
-              height: 1.6,
-              fontSize: 15,
+              color: Color(0xFF9BA9BF),
+              height: 1.5,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 24),
@@ -108,7 +164,7 @@ class _StartupSelectionCard extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
                 onTap: () {
-                  Navigator.of(context).pushReplacement(
+                  Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) =>
                           AdminHomePage(user: user, startup: startup),
@@ -118,18 +174,22 @@ class _StartupSelectionCard extends StatelessWidget {
                 child: Ink(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: const Color(0x2210161C),
+                    color: const Color(0xFF0A1321),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0x55DCEAFF)),
+                    border: Border.all(color: const Color(0xFF243145)),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        height: 48,
-                        width: 48,
+                        height: 54,
+                        width: 54,
                         decoration: BoxDecoration(
-                          color: const Color(0x1FFFFFFF),
-                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF163458), Color(0xFF27589C)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(
                           Icons.apartment_rounded,
@@ -146,18 +206,18 @@ class _StartupSelectionCard extends StatelessWidget {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
-                                fontSize: 16,
+                                fontSize: 17,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              startup.sector?.isNotEmpty == true
-                                  ? '${startup.stage} • ${startup.sector}'
-                                  : startup.stage,
-                              style: const TextStyle(
-                                color: Color(0xFFDCEAFF),
-                                height: 1.4,
-                              ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _StartupMetaPill(label: startup.stage),
+                                if (startup.sector?.isNotEmpty == true)
+                                  _StartupMetaPill(label: startup.sector!),
+                              ],
                             ),
                           ],
                         ),
@@ -204,6 +264,74 @@ class _AdminSelectionEmptyState extends StatelessWidget {
               style: TextStyle(color: Color(0xFFB7BCC8), height: 1.5),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectionBackground extends StatelessWidget {
+  const _SelectionBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            top: -90,
+            right: -40,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [Color(0x332E7DDE), Color(0x0009111F)],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -60,
+            top: 260,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [Color(0x2216B6C7), Color(0x0009111F)],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StartupMetaPill extends StatelessWidget {
+  final String label;
+
+  const _StartupMetaPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF132238),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFF294061)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFFD7E6FF),
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
