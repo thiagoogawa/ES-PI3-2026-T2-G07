@@ -27,6 +27,21 @@ String mapAuthException(Object error) {
       case 'network-request-failed':
         return 'Falha de conexao. Verifique sua internet.';
 
+      case 'invalid-verification-code':
+        return 'Codigo SMS invalido.';
+
+      case 'session-expired':
+        return 'O codigo SMS expirou. Solicite um novo envio.';
+
+      case 'second-factor-cancelled':
+        return 'A verificacao em duas etapas foi cancelada.';
+
+      case 'unsupported-second-factor':
+        return 'Nenhum segundo fator por telefone foi encontrado.';
+
+      case 'missing-second-factor-handler':
+        return 'O fluxo de verificacao em duas etapas nao foi configurado.';
+
       default:
         return error.message ?? 'Falha ao autenticar no Firebase.';
     }

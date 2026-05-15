@@ -37,4 +37,30 @@ class AuthApiDataSource {
 
     return AuthenticatedUserModel.fromJson(response);
   }
+
+  Future<bool> syncMfaState(String idToken) async {
+    final response = await _apiClient.post(
+      ApiConstants.authMfaSync,
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    return (response['data'] as Map<String, dynamic>?)?['enabled'] as bool? ??
+        false;
+  }
+
+  Future<bool> disableMfa(String idToken) async {
+    final response = await _apiClient.delete(
+      ApiConstants.authMfa,
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    return (response['data'] as Map<String, dynamic>?)?['enabled'] as bool? ??
+        false;
+  }
 }

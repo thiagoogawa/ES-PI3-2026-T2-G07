@@ -21,6 +21,7 @@ class AuthenticatedUser {
   final String? phone;
   final String? picture;
   final String? provider;
+  final bool mfaEnabled;
   final List<String> roles;
   final List<ManagedStartup> managedStartups;
 
@@ -33,6 +34,7 @@ class AuthenticatedUser {
     required this.phone,
     required this.picture,
     required this.provider,
+    required this.mfaEnabled,
     required this.roles,
     required this.managedStartups,
   });

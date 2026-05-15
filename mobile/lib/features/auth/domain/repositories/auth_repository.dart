@@ -1,11 +1,14 @@
 import '../entities/authenticated_user.dart';
 
+typedef SmsCodeResolver = Future<String?> Function(String phoneHint);
+
 abstract class AuthRepository {
   Future<AuthenticatedUser?> getCurrentUser();
 
   Future<AuthenticatedUser> signIn({
     required String email,
     required String password,
+    SmsCodeResolver? requestSecondFactorCode,
   });
 
   Future<AuthenticatedUser> signUp({

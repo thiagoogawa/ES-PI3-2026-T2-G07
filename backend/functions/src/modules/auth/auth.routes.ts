@@ -11,5 +11,20 @@ authRouter.post(
   authMiddleware,
   asyncHandler(AuthController.updateProfile),
 );
+authRouter.get(
+  "/mfa",
+  authMiddleware,
+  asyncHandler(AuthController.getMfaStatus),
+);
+authRouter.post(
+  "/mfa/sync",
+  authMiddleware,
+  asyncHandler(AuthController.syncMfaStatus),
+);
+authRouter.delete(
+  "/mfa",
+  authMiddleware,
+  asyncHandler(AuthController.disableMfa),
+);
 
 export {authRouter};

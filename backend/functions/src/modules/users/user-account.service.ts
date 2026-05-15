@@ -157,7 +157,7 @@ const normalizeRoles = (
   source: Record<string, unknown>,
   fallback?: string[],
 ): string[] => {
-  const roles = new Set<String>(fallback ?? []);
+  const roles = new Set<string>(fallback ?? []);
   const roleMap = readRecord(source, "papeis", "roles") ?? {};
 
   Object.entries(roleMap).forEach(([key, value]) => {
@@ -275,6 +275,10 @@ export const getOrCreateUserAccount = async (
 
 export const syncBasicUserProfile = async (
   decodedToken: DecodedIdToken,
+  options: {
+    phone?: string | null;
+    mfaEnabled?: boolean;
+  } = {},
 ): Promise<void> => {
   const userRef = getUserDocRef(decodedToken.uid);
 
@@ -282,8 +286,8 @@ export const syncBasicUserProfile = async (
     uid: decodedToken.uid,
     email: decodedToken.email ?? null,
     nome: decodedToken.name ?? null,
-    telefone: decodedToken.phone_number ?? null,
-    mfaAtivo: false,
+    telefone: options.phone ?? decodedToken.phone_number ?? null,
+    mfaAtivo: options.mfaEnabled ?? false,
     updatedAt: FieldValue.serverTimestamp(),
   };
 

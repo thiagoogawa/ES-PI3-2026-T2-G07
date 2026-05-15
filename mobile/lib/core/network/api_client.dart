@@ -45,6 +45,24 @@ class ApiClient {
     return _parseResponse(response);
   }
 
+  Future<Map<String, dynamic>> delete(
+    String url, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
+    final request = http.Request('DELETE', Uri.parse(url));
+    request.headers.addAll(headers ?? const {});
+
+    if (body != null) {
+      request.body = jsonEncode(body);
+    }
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    return _parseResponse(response);
+  }
+
   Map<String, dynamic> _parseResponse(http.Response response) {
     final Map<String, dynamic> body = jsonDecode(response.body);
 

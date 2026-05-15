@@ -46,7 +46,11 @@ class AuthController extends ChangeNotifier {
     return null;
   }
 
-  Future<void> signIn({required String email, required String password}) async {
+  Future<void> signIn({
+    required String email,
+    required String password,
+    SmsCodeResolver? requestSecondFactorCode,
+  }) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -55,6 +59,7 @@ class AuthController extends ChangeNotifier {
       currentUser = await _authRepository.signIn(
         email: email,
         password: password,
+        requestSecondFactorCode: requestSecondFactorCode,
       );
     } catch (error) {
       errorMessage = mapAuthException(error);

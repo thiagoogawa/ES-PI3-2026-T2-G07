@@ -40,4 +40,49 @@ export class AuthController {
       .status(HTTP_STATUS.OK)
       .json(successResponse(user, "Authenticated user updated successfully"));
   }
+
+  static async getMfaStatus(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const mfa = await AuthService.getMfaStatus(request.user);
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(mfa, "MFA status fetched successfully"));
+  }
+
+  static async syncMfaStatus(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const mfa = await AuthService.syncMfaState(request.user);
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(mfa, "MFA status synced successfully"));
+  }
+
+  static async disableMfa(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const mfa = await AuthService.disableMfa(request.user);
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(mfa, "MFA disabled successfully"));
+  }
 }

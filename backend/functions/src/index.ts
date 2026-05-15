@@ -38,6 +38,18 @@ export const updateUserProfile = onRequest(createApp((router) => {
   router.post("/", authMiddleware, asyncHandler(AuthController.updateProfile));
 }));
 
+export const getUserMfaStatus = onRequest(createApp((router) => {
+  router.get("/", authMiddleware, asyncHandler(AuthController.getMfaStatus));
+}));
+
+export const syncUserMfaState = onRequest(createApp((router) => {
+  router.post("/", authMiddleware, asyncHandler(AuthController.syncMfaStatus));
+}));
+
+export const disableUserMfa = onRequest(createApp((router) => {
+  router.delete("/", authMiddleware, asyncHandler(AuthController.disableMfa));
+}));
+
 export const seedDemo = onRequest(createApp((router) => {
   router.post("/", asyncHandler(DevController.seedDemo));
 }));

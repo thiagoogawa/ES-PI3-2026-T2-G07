@@ -35,8 +35,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthenticatedUser> signIn({
     required String email,
     required String password,
+    SmsCodeResolver? requestSecondFactorCode,
   }) async {
-    await _authRemoteDataSource.signIn(email: email, password: password);
+    await _authRemoteDataSource.signIn(
+      email: email,
+      password: password,
+      requestSecondFactorCode: requestSecondFactorCode,
+    );
 
     try {
       return await _fetchAuthenticatedUser();

@@ -21,6 +21,12 @@ class ApiConstants {
   /// Endpoint to retrieve or update the user profile.
   static const String authProfile = '$baseUrl/v1/auth/profile';
 
+  /// Endpoint to read or disable the current MFA configuration.
+  static const String authMfa = '$baseUrl/v1/auth/mfa';
+
+  /// Endpoint to synchronize MFA state stored by the backend.
+  static const String authMfaSync = '$baseUrl/v1/auth/mfa/sync';
+
   /// Endpoint to fetch all startups.
   static const String startups = '$baseUrl/v1/startups';
 

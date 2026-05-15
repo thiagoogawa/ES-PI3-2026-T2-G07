@@ -8,6 +8,7 @@ import '../controllers/auth_controller.dart';
 import 'app_home_router.dart';
 import 'reset_password_page.dart';
 import 'signup_flow_page.dart';
+import '../widgets/mfa_prompts.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -208,6 +209,15 @@ class _LoginPageState extends State<LoginPage> {
     await controller.signIn(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
+      requestSecondFactorCode: (phoneHint) {
+        final suffix = phoneHint.isEmpty ? 'seu celular cadastrado' : phoneHint;
+
+        return showSmsCodePrompt(
+          context,
+          title: 'Confirmar 2FA',
+          subtitle: 'Digite o codigo SMS enviado para $suffix.',
+        );
+      },
     );
   }
 

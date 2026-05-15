@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/errors/auth_exception_mapper.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../../data/datasources/auth_api_datasource.dart';
@@ -17,6 +18,7 @@ import '../../../startups/domain/entities/startup.dart';
 import '../../../startups/presentation/pages/startup_detail_page.dart';
 import '../../../startups/presentation/pages/trading_page.dart';
 import 'login_page.dart';
+import '../widgets/mfa_prompts.dart';
 
 class HomePage extends StatefulWidget {
   final AuthenticatedUser user;
@@ -38,6 +40,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isRefreshingProfile = false;
   bool _isPortfolioBalanceVisible = true;
+  bool _isProcessingMfa = false;
 
   static const List<Color> _portfolioChartColors = [
     Color(0xFF295AA5),
@@ -181,6 +184,135 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,
     );
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _handleMfaAction() async {
+    if (_isProcessingMfa) {
+      return;
+    }
+
+    if (_activeUser.mfaEnabled) {
+      await _disableMfa();
+      return;
+    }
+
+    await _enableMfa();
+  }
+
+  Future<void> _enableMfa() async {
+    final email = _activeUser.email?.trim() ?? '';
+
+    if (email.isEmpty) {
+      _showMessage('Sua conta precisa ter um e-mail valido para ativar o 2FA.');
+      return;
+    }
+
+    if (!_activeUser.emailVerified) {
+      _showMessage('Verifique seu e-mail antes de ativar o 2FA por SMS.');
+      return;
+    }
+
+    final enrollment = await showMfaEnrollmentPrompt(
+      context,
+      initialPhoneNumber: _activeUser.phone,
+    );
+
+    if (enrollment == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _isProcessingMfa = true;
+    });
+
+    try {
+      await _authRemote.reauthenticateWithPassword(
+        email: email,
+        password: enrollment.password,
+      );
+      await _authRemote.enrollSmsSecondFactor(
+        phoneNumber: enrollment.phoneNumber,
+        displayName: 'Celular principal',
+        requestSmsCode: (phoneHint) {
+          return showSmsCodePrompt(
+            context,
+            title: 'Confirmar celular',
+            subtitle: 'Digite o codigo SMS enviado para $phoneHint.',
+          );
+        },
+      );
+
+      final idToken = await _authRemote.getIdToken(forceRefresh: true);
+      await _authApi.syncMfaState(idToken);
+      await _refreshProfile();
+      _showMessage('A verificacao em duas etapas foi ativada com sucesso.');
+    } catch (error) {
+      _showMessage(mapAuthException(error));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessingMfa = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _disableMfa() async {
+    final shouldDisable = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Desativar 2FA'),
+          content: const Text(
+            'Tem certeza que deseja remover a verificacao em duas etapas por SMS?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Desativar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDisable != true || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _isProcessingMfa = true;
+    });
+
+    try {
+      final idToken = await _authRemote.getIdToken(forceRefresh: true);
+      await _authApi.disableMfa(idToken);
+      await _authRemote.reloadCurrentUser();
+      await _refreshProfile();
+      _showMessage('A verificacao em duas etapas foi desativada.');
+    } catch (error) {
+      _showMessage(mapAuthException(error));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessingMfa = false;
+        });
+      }
+    }
   }
 
   String _greeting() {
@@ -1306,8 +1438,25 @@ class _HomePageState extends State<HomePage> {
         _buildProfileActionTile(
           icon: Icons.shield_outlined,
           title: 'Acesso e seguranca',
-          subtitle: '${_activeUser.email ?? '-'}  •  $emailStatus',
+          subtitle:
+              '${_activeUser.email ?? '-'}  •  $emailStatus  •  ${_activeUser.mfaEnabled ? '2FA ativo' : '2FA inativo'}',
           onTap: () => _refreshProfile(showFeedback: true),
+          iconBackground: const Color(0xFF17212F),
+        ),
+        const SizedBox(height: 12),
+        _buildProfileActionTile(
+          icon: _activeUser.mfaEnabled
+              ? Icons.shield_rounded
+              : Icons.shield_moon_outlined,
+          title: _activeUser.mfaEnabled
+              ? 'Desativar verificacao em duas etapas'
+              : 'Ativar verificacao em duas etapas',
+          subtitle: _isProcessingMfa
+              ? 'Processando configuracao do 2FA...'
+              : _activeUser.mfaEnabled
+              ? 'Sua conta exige um codigo SMS no login.'
+              : 'Adicione um segundo fator por SMS para proteger seu acesso.',
+          onTap: _handleMfaAction,
           iconBackground: const Color(0xFF17212F),
         ),
         const SizedBox(height: 12),
