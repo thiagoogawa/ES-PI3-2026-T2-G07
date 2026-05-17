@@ -41,7 +41,8 @@ class _HomePageState extends State<HomePage> {
   AuthenticatedUser? _currentUser;
   int _selectedIndex = 0;
   bool _isRefreshingProfile = false;
-  bool _isPortfolioBalanceVisible = true;
+  bool _isPortfolioBalanceVisible = false;
+  bool _isBalanceVisible = false;
   bool _showAllStartups = false;
 
   @override
