@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/startup_splash_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -80,7 +80,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginPage(),
+      home: const StartupSplashPage(),
     );
   }
 }

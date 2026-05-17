@@ -5,6 +5,7 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../controllers/auth_controller.dart';
+import '../widgets/mescla_brand_logo.dart';
 import 'app_home_router.dart';
 import 'reset_password_page.dart';
 import 'signup_flow_page.dart';
@@ -21,6 +22,8 @@ class _LoginPageState extends State<LoginPage> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  bool _isCompletingLoginTransition = false;
+  BuildContext? _authSheetContext;
 
   @override
   void initState() {
@@ -34,13 +37,10 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     controller.addListener(() {
-      if (controller.currentUser != null && mounted) {
-        final authenticatedUser = controller.currentUser as AuthenticatedUser;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => buildHomePageForUser(authenticatedUser),
-          ),
-        );
+      if (controller.currentUser != null &&
+          mounted &&
+          !_isCompletingLoginTransition) {
+        _handleAuthenticatedUser(controller.currentUser!);
       }
 
       if (controller.errorMessage != null && mounted) {
@@ -49,7 +49,9 @@ class _LoginPageState extends State<LoginPage> {
         ).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
       }
 
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
 
     controller.restoreSession();
@@ -75,6 +77,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _openAuthSheet() async {
     emailController.clear();
     passwordController.clear();
+    _isCompletingLoginTransition = false;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -84,6 +87,8 @@ class _LoginPageState extends State<LoginPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
+        _authSheetContext = sheetContext;
+
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
@@ -98,98 +103,104 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Entrar',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Acesse sua conta para continuar.',
-                    style: const TextStyle(
-                      color: Color(0xFFBDBDBD),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _inputDecoration('E-mail'),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _inputDecoration('Senha'),
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: controller.isLoading
-                          ? null
-                          : () async {
-                              Navigator.of(sheetContext).pop();
-                              await _openResetPasswordPage();
-                            },
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF84B5FF),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 0,
-                          vertical: 4,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        minimumSize: Size.zero,
-                      ),
-                      child: const Text(
-                        'Esqueceu a Senha?',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  if (_isCompletingLoginTransition) ...[
+                    const _SheetSuccessLoadingState(),
+                  ] else ...[
+                    Text(
+                      'Entrar',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: controller.isLoading
-                          ? null
-                          : () async => _handleLogin(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3C78D8),
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Acesse sua conta para continuar.',
+                      style: const TextStyle(
+                        color: Color(0xFFBDBDBD),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _inputDecoration('E-mail'),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _inputDecoration('Senha'),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: controller.isLoading
+                            ? null
+                            : () async {
+                                Navigator.of(sheetContext).pop();
+                                await _openResetPasswordPage();
+                              },
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF84B5FF),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 0,
+                            vertical: 4,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: Size.zero,
+                        ),
+                        child: const Text(
+                          'Esqueceu a Senha?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      child: controller.isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.4,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Entrar'),
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: controller.isLoading
+                            ? null
+                            : () async => _handleLogin(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3C78D8),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: controller.isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Entrar'),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );
           },
         );
       },
-    );
+    ).whenComplete(() {
+      _authSheetContext = null;
+    });
   }
 
   Future<void> _handleLogin() async {
@@ -208,6 +219,86 @@ class _LoginPageState extends State<LoginPage> {
     await controller.signIn(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
+    );
+  }
+
+  Future<void> _handleAuthenticatedUser(AuthenticatedUser user) async {
+    setState(() {
+      _isCompletingLoginTransition = true;
+    });
+
+    if (_authSheetContext != null) {
+      Navigator.of(_authSheetContext!).pop();
+      _authSheetContext = null;
+    }
+
+    await _showPostLoginLoading();
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(_buildHomeRoute(user));
+  }
+
+  Future<void> _showPostLoginLoading() async {
+    showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Carregando sua conta',
+      barrierColor: const Color(0xCC090B10),
+      transitionDuration: const Duration(milliseconds: 240),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return const _PostLoginLoadingDialog();
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        final scaleAnimation = Tween<double>(
+          begin: 0.94,
+          end: 1.0,
+        ).animate(curvedAnimation);
+
+        return FadeTransition(
+          opacity: curvedAnimation,
+          child: ScaleTransition(scale: scaleAnimation, child: child),
+        );
+      },
+    );
+
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+
+  Route<void> _buildHomeRoute(AuthenticatedUser user) {
+    return PageRouteBuilder<void>(
+      transitionDuration: const Duration(milliseconds: 520),
+      reverseTransitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return buildHomePageForUser(user);
+      },
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final fadeAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        final slideAnimation = Tween<Offset>(
+          begin: const Offset(0, 0.05),
+          end: Offset.zero,
+        ).animate(fadeAnimation);
+
+        return FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(position: slideAnimation, child: child),
+        );
+      },
     );
   }
 
@@ -260,7 +351,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              const _MesclaBrandLogo(size: 148),
+              const MesclaBrandLogo(size: 148),
               const SizedBox(height: 72),
               SizedBox(
                 width: double.infinity,
@@ -319,66 +410,111 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class _MesclaBrandLogo extends StatelessWidget {
-  final double size;
-
-  const _MesclaBrandLogo({required this.size});
+class _PostLoginLoadingDialog extends StatelessWidget {
+  const _PostLoginLoadingDialog();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 12,
-            spreadRadius: 1,
-            offset: Offset(0, 6),
+    return Material(
+      color: Colors.transparent,
+      child: Center(
+        child: Container(
+          width: 232,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          decoration: BoxDecoration(
+            color: const Color(0xFF13161D),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: const Color(0xFF2A3140)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 26,
+                offset: Offset(0, 18),
+              ),
+            ],
           ),
-        ],
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MesclaBrandLogo(size: 86),
+              SizedBox(height: 18),
+              Text(
+                'Conectando ao Mescla Invest',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Estamos preparando seu ambiente de investimento.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFFB8C1D1),
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 18),
+              SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  color: Color(0xFF84B5FF),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      child: CustomPaint(painter: _MesclaBrandLogoPainter()),
     );
   }
 }
 
-class _MesclaBrandLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final pinkPaint = Paint()
-      ..color = const Color(0xFFE40062)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.11
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final whitePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.11
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final pinkPath = Path()
-      ..moveTo(size.width * 0.18, size.height * 0.26)
-      ..lineTo(size.width * 0.76, size.height * 0.26)
-      ..lineTo(size.width * 0.76, size.height * 0.68);
-
-    final whitePath = Path()
-      ..moveTo(size.width * 0.18, size.height * 0.48)
-      ..lineTo(size.width * 0.18, size.height * 0.78)
-      ..lineTo(size.width * 0.76, size.height * 0.78);
-
-    canvas.drawPath(pinkPath, pinkPaint);
-    canvas.drawPath(whitePath, whitePaint);
-  }
+class _SheetSuccessLoadingState extends StatelessWidget {
+  const _SheetSuccessLoadingState();
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MesclaBrandLogo(size: 74),
+          SizedBox(height: 18),
+          Text(
+            'Login concluido',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Redirecionando voce para a plataforma.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFFBDBDBD),
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+          SizedBox(height: 22),
+          SizedBox(
+            height: 22,
+            width: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.4,
+              color: Color(0xFF84B5FF),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
