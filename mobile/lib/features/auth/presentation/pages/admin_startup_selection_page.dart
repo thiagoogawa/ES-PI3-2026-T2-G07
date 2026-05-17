@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../data/datasources/auth_remote_datasource.dart';
 import '../../domain/entities/authenticated_user.dart';
+import '../widgets/logout_flow.dart';
 import 'admin_home_page.dart';
-import 'login_page.dart';
 
 class AdminStartupSelectionPage extends StatelessWidget {
   final AuthenticatedUser user;
@@ -11,16 +10,7 @@ class AdminStartupSelectionPage extends StatelessWidget {
   const AdminStartupSelectionPage({super.key, required this.user});
 
   Future<void> _signOut(BuildContext context) async {
-    await AuthRemoteDataSource().signOut();
-
-    if (!context.mounted) {
-      return;
-    }
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
+    await performLogoutFlow(context);
   }
 
   @override

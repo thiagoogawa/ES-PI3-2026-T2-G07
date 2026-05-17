@@ -3,12 +3,12 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
+import '../widgets/logout_flow.dart';
 import '../../data/datasources/profile_storage_datasource.dart';
 import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/data/datasources/startup_trading_api_datasource.dart';
@@ -16,7 +16,6 @@ import '../../../startups/data/models/startup_portfolio_snapshot_model.dart';
 import '../../../startups/domain/entities/startup.dart';
 import '../../../startups/presentation/pages/startup_detail_page.dart';
 import '../../../startups/presentation/pages/trading_page.dart';
-import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   final AuthenticatedUser user;
@@ -171,16 +170,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _handleLogout() async {
-    await FirebaseAuth.instance.signOut();
-
-    if (!mounted) {
-      return;
-    }
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
+    await performLogoutFlow(context);
   }
 
   String _greeting() {

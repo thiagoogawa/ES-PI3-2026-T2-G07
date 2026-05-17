@@ -5,8 +5,8 @@ import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/domain/entities/startup_detail.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../domain/entities/authenticated_user.dart';
+import '../widgets/logout_flow.dart';
 import 'admin_startup_selection_page.dart';
-import 'login_page.dart';
 
 class AdminHomePage extends StatefulWidget {
   final AuthenticatedUser user;
@@ -147,16 +147,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Future<void> _signOut() async {
-    await _authRemoteDataSource.signOut();
-
-    if (!mounted) {
-      return;
-    }
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
+    await performLogoutFlow(context);
   }
 
   void _showMessage(String message) {
