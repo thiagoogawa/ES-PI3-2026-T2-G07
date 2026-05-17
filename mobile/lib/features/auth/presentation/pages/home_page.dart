@@ -42,6 +42,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isRefreshingProfile = false;
   bool _isPortfolioBalanceVisible = true;
+  bool _showAllStartups = false;
 
   @override
   void initState() {
@@ -931,21 +932,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCatalog(List<Startup> startups) {
-    if (startups.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 120),
-          Center(
-            child: Text(
-              'Nenhuma startup encontrada.',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
+  if (startups.isEmpty) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: const [
+        SizedBox(height: 120),
+        Center(
+          child: Text(
+            'Nenhuma startup encontrada.',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
-        ],
-      );
-    }
+        ),
+      ],
+    );
+  }
 
+  final displayedStartups = _showAllStartups
+      ? startups
+      : startups.take(3).toList();
+    
     return RefreshIndicator(
       onRefresh: _reloadHomeData,
       color: const Color(0xFF4E91F3),
@@ -975,15 +980,36 @@ class _HomePageState extends State<HomePage> {
               childAspectRatio: 0.8,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, index) => _buildStartupCard(startups[index]),
-              childCount: startups.length,
+              (context, index) => _buildStartupCard(displayedStartups[index]),
+              childCount: displayedStartups.length,
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-        ],
-      ),
-    );
-  }
+          SliverToBoxAdapter(
+            child: Center(
+              child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    _showAllStartups = !_showAllStartups;
+                  });
+                },
+                icon: Icon(
+                  _showAllStartups
+                      ? Icons.remove_circle_outline_rounded
+                      : Icons.add_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ),
+          ),
+
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 24),
+        ),
+                ],
+              ),
+            );
+          }
 
   Widget _buildSelectedBody(List<Startup> startups) {
     switch (_selectedIndex) {
