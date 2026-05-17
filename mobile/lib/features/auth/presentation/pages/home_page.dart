@@ -4,7 +4,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/errors/user_friendly_error_mapper.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
@@ -99,17 +101,24 @@ class _HomePageState extends State<HomePage> {
       });
 
       if (showFeedback) {
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Perfil atualizado.')));
+          message: 'Perfil atualizado.',
+          type: AppSnackBarType.success,
+        );
       }
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nao foi possivel atualizar o perfil: $error')),
+      showAppSnackBar(
+        context,
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel atualizar o perfil agora.',
+        ),
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -557,7 +566,11 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${snapshot.error}',
+                  mapUserFriendlyError(
+                    snapshot.error!,
+                    fallbackMessage:
+                        'Verifique sua conexao e tente carregar novamente.',
+                  ),
                   style: const TextStyle(
                     color: Color(0xFFB7BCC8),
                     fontSize: 13,
@@ -858,7 +871,11 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${snapshot.error}',
+                  mapUserFriendlyError(
+                    snapshot.error!,
+                    fallbackMessage:
+                        'Nao foi possivel carregar o portfolio agora.',
+                  ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Color(0xFFB7BCC8)),
                 ),
@@ -1471,7 +1488,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${snapshot.error}',
+                        mapUserFriendlyError(
+                          snapshot.error!,
+                          fallbackMessage:
+                              'Nao foi possivel carregar as startups agora.',
+                        ),
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Color(0xFFB7BCC8)),
                       ),
@@ -1934,12 +1955,13 @@ class _EditProfilePageState extends State<_EditProfilePage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Nao foi possivel abrir a galeria. Reinicie o app se acabou de instalar essa funcao. Erro: $error',
-          ),
+      showAppSnackBar(
+        context,
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel abrir a galeria agora.',
         ),
+        type: AppSnackBarType.error,
       );
     }
   }
@@ -1981,9 +2003,14 @@ class _EditProfilePageState extends State<_EditProfilePage> {
         return;
       }
 
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao salvar perfil: $error')));
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel salvar o perfil agora.',
+        ),
+        type: AppSnackBarType.error,
+      );
     } finally {
       if (mounted) {
         setState(() {

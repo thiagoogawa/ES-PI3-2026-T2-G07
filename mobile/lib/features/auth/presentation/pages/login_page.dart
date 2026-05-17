@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
@@ -44,9 +45,11 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (controller.errorMessage != null && mounted) {
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
+          message: controller.errorMessage!,
+          type: AppSnackBarType.error,
+        );
       }
 
       if (mounted) {
@@ -210,9 +213,11 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (validationError != null && mounted) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(validationError)));
+        message: validationError,
+        type: AppSnackBarType.error,
+      );
       return;
     }
 

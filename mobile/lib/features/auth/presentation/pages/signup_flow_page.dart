@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
@@ -49,12 +50,16 @@ class _SignupFlowPageState extends State<SignupFlowPage> {
       }
 
       if (controller.errorMessage != null && mounted) {
-        ScaffoldMessenger.of(
+        showAppSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
+          message: controller.errorMessage!,
+          type: AppSnackBarType.error,
+        );
       }
 
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 
@@ -144,9 +149,11 @@ class _SignupFlowPageState extends State<SignupFlowPage> {
   Future<void> _handleContinue() async {
     final validationError = _validateCurrentStep();
     if (validationError != null && mounted) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(validationError)));
+        message: validationError,
+        type: AppSnackBarType.error,
+      );
       return;
     }
 

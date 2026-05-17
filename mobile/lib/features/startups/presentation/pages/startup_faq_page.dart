@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/user_friendly_error_mapper.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../data/datasources/startups_api_datasource.dart';
 import '../../domain/entities/startup.dart';
 import '../../domain/entities/startup_detail.dart';
@@ -53,9 +55,7 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showAppSnackBar(context, message: message, type: AppSnackBarType.info);
   }
 
   Future<void> _submitQuestion() async {
@@ -85,14 +85,25 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
         return;
       }
 
-      _showMessage('Pergunta enviada e publicada no FAQ.');
+      showAppSnackBar(
+        context,
+        message: 'Pergunta enviada e publicada no FAQ.',
+        type: AppSnackBarType.success,
+      );
       await _reload();
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      _showMessage('$error');
+      showAppSnackBar(
+        context,
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel enviar sua pergunta agora.',
+        ),
+        type: AppSnackBarType.error,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -302,7 +313,11 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '${snapshot.error}',
+                      mapUserFriendlyError(
+                        snapshot.error!,
+                        fallbackMessage:
+                            'Nao foi possivel carregar o FAQ desta startup.',
+                      ),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFB7BCC8)),
                     ),
