@@ -31,6 +31,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
   _DashboardPeriod _selectedDashboardPeriod = _DashboardPeriod.monthly;
 
   bool _isSubmittingTrade = false;
+  bool _isPriceHistoryExpanded = false;
 
   @override
   void initState() {
@@ -1165,7 +1166,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
             )
           else
             ...detail.priceHistory
-                .take(10)
+                .take(_isPriceHistoryExpanded ? detail.priceHistory.length : 3)
                 .map(
                   (point) => ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -1179,6 +1180,32 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                     ),
                   ),
                 ),
+          if (detail.priceHistory.length > 3)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isPriceHistoryExpanded = !_isPriceHistoryExpanded;
+                  });
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  foregroundColor: const Color(0xFF84B5FF),
+                ),
+                icon: Text(
+                  _isPriceHistoryExpanded ? '-' : '+',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                label: Text(
+                  _isPriceHistoryExpanded ? 'Ver menos' : 'Ver mais',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+            ),
         ],
       ),
     );
