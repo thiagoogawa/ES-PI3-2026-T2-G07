@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/errors/user_friendly_error_mapper.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../auth/data/datasources/auth_remote_datasource.dart';
+import '../../data/datasources/startup_trading_api_datasource.dart';
 import '../../data/datasources/startups_api_datasource.dart';
+import '../../data/models/startup_portfolio_snapshot_model.dart';
 import '../../domain/entities/startup.dart';
 import '../../domain/entities/startup_detail.dart';
 
@@ -18,16 +21,22 @@ class StartupFaqPage extends StatefulWidget {
 
 class _StartupFaqPageState extends State<StartupFaqPage> {
   late final StartupsApiDataSource _startupsApiDataSource;
-  late Future<StartupDetail> _faqFuture;
+  late final StartupTradingApiDataSource _startupTradingApiDataSource;
+  late final AuthRemoteDataSource _authRemoteDataSource;
+  late Future<_FaqViewData> _faqFuture;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _questionController = TextEditingController();
 
   bool _isSubmittingQuestion = false;
+  bool _submitAsPublic = true;
 
   @override
   void initState() {
     super.initState();
-    _startupsApiDataSource = StartupsApiDataSource(ApiClient());
+    final apiClient = ApiClient();
+    _startupsApiDataSource = StartupsApiDataSource(apiClient);
+    _startupTradingApiDataSource = StartupTradingApiDataSource(apiClient);
+    _authRemoteDataSource = AuthRemoteDataSource();
     _faqFuture = _loadFaq();
   }
 
@@ -38,8 +47,25 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
     super.dispose();
   }
 
-  Future<StartupDetail> _loadFaq() {
-    return _startupsApiDataSource.fetchStartupDetail(widget.startup.id);
+  Future<_FaqViewData> _loadFaq() async {
+    final idToken = await _authRemoteDataSource.getIdToken();
+    final results = await Future.wait<dynamic>([
+      _startupsApiDataSource.fetchStartupDetailAuthenticated(
+        idToken,
+        widget.startup.id,
+      ),
+      _startupTradingApiDataSource.fetchPortfolio(idToken),
+    ]);
+
+    final detail = results[0] as StartupDetail;
+    final portfolio = results[1] as StartupPortfolioSnapshotModel;
+    final canAskPrivateQuestion =
+        (portfolio.positionForStartup(widget.startup.id)?.quantity ?? 0) > 0;
+
+    return _FaqViewData(
+      detail: detail,
+      canAskPrivateQuestion: canAskPrivateQuestion,
+    );
   }
 
   Future<void> _reload() async {
@@ -69,17 +95,39 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
       return;
     }
 
+    if (!_submitAsPublic) {
+      final viewData = await _faqFuture;
+      if (!viewData.canAskPrivateQuestion) {
+        if (!mounted) {
+          return;
+        }
+
+        showAppSnackBar(
+          context,
+          message:
+              'Perguntas privadas estao disponiveis apenas para investidores desta startup.',
+          type: AppSnackBarType.error,
+        );
+        return;
+      }
+    }
+
     setState(() {
       _isSubmittingQuestion = true;
     });
 
     try {
+      final submittedAsPublic = _submitAsPublic;
+      final idToken = await _authRemoteDataSource.getIdToken();
       await _startupsApiDataSource.submitQuestion(
         widget.startup.id,
         question: question,
+        isPublic: submittedAsPublic,
+        idToken: idToken,
       );
 
       _questionController.clear();
+      _submitAsPublic = true;
 
       if (!mounted) {
         return;
@@ -87,7 +135,9 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
 
       showAppSnackBar(
         context,
-        message: 'Pergunta enviada e publicada no FAQ.',
+        message: submittedAsPublic
+            ? 'Pergunta enviada para a area publica do FAQ.'
+            : 'Pergunta privada enviada para a startup.',
         type: AppSnackBarType.success,
       );
       await _reload();
@@ -125,6 +175,24 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (!question.isPublic) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0x338B5CF6),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: const Text(
+                'Privada',
+                style: TextStyle(
+                  color: Color(0xFFD3B4FF),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
           Text(
             question.question,
             style: const TextStyle(
@@ -146,6 +214,36 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuestionSection(
+    String title,
+    String emptyMessage,
+    List<StartupQuestion> questions,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        if (questions.isEmpty)
+          Text(
+            emptyMessage,
+            style: const TextStyle(color: Color(0xFFB7BCC8), fontSize: 14),
+          )
+        else
+          ...questions.map(_buildQuestionCard),
+      ],
     );
   }
 
@@ -194,7 +292,7 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
     );
   }
 
-  Widget _buildComposer() {
+  Widget _buildComposer(bool canAskPrivateQuestion) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(14),
@@ -215,13 +313,66 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Digite sua pergunta para publicar no FAQ desta startup.',
-            style: TextStyle(
+          Text(
+            canAskPrivateQuestion
+                ? 'Escolha se a pergunta deve ficar publica no FAQ ou privada entre voce e a startup.'
+                : 'Digite sua pergunta para publicar no FAQ desta startup. Perguntas privadas ficam disponiveis apenas para investidores.',
+            style: const TextStyle(
               color: Color(0xFFB7BCC8),
               fontSize: 12,
               height: 1.4,
             ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            children: [
+              ChoiceChip(
+                selected: _submitAsPublic,
+                label: const Text('Publica'),
+                labelStyle: TextStyle(
+                  color: _submitAsPublic
+                      ? Colors.white
+                      : const Color(0xFFB7BCC8),
+                  fontWeight: FontWeight.w600,
+                ),
+                selectedColor: const Color(0xFF346AC0),
+                backgroundColor: const Color(0xFF101214),
+                side: const BorderSide(color: Color(0xFF2E323A)),
+                onSelected: (_) {
+                  setState(() {
+                    _submitAsPublic = true;
+                  });
+                },
+              ),
+              ChoiceChip(
+                selected: !_submitAsPublic,
+                label: const Text('Privada'),
+                labelStyle: TextStyle(
+                  color: !_submitAsPublic
+                      ? Colors.white
+                      : canAskPrivateQuestion
+                      ? const Color(0xFFD8C8F8)
+                      : const Color(0xFF6E7380),
+                  fontWeight: FontWeight.w600,
+                ),
+                selectedColor: const Color(0xFF6B46C1),
+                backgroundColor: const Color(0xFF101214),
+                disabledColor: const Color(0xFF101214),
+                side: BorderSide(
+                  color: canAskPrivateQuestion
+                      ? const Color(0xFF4B4160)
+                      : const Color(0xFF2E323A),
+                ),
+                onSelected: canAskPrivateQuestion
+                    ? (_) {
+                        setState(() {
+                          _submitAsPublic = false;
+                        });
+                      }
+                    : null,
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           TextField(
@@ -273,7 +424,11 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Publicar pergunta'),
+                  : Text(
+                      _submitAsPublic
+                          ? 'Enviar pergunta publica'
+                          : 'Enviar pergunta privada',
+                    ),
             ),
           ),
         ],
@@ -290,7 +445,7 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
         foregroundColor: Colors.white,
         title: Text('FAQ • ${widget.startup.name}'),
       ),
-      body: FutureBuilder<StartupDetail>(
+      body: FutureBuilder<_FaqViewData>(
         future: _faqFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -336,19 +491,22 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
             );
           }
 
-          final detail = snapshot.data!;
+          final viewData = snapshot.data!;
+          final detail = viewData.detail;
           final searchTerm = _searchController.text.trim().toLowerCase();
-          final filteredQuestions = detail.questions
-              .where((question) {
-                if (searchTerm.isEmpty) {
-                  return true;
-                }
+          final filteredQuestions = detail.questions.where((question) {
+            if (searchTerm.isEmpty) {
+              return true;
+            }
 
-                return question.question.toLowerCase().contains(searchTerm) ||
-                    (question.answer?.toLowerCase().contains(searchTerm) ??
-                        false);
-              })
-              .take(5)
+            return question.question.toLowerCase().contains(searchTerm) ||
+                (question.answer?.toLowerCase().contains(searchTerm) ?? false);
+          }).toList();
+          final publicQuestions = filteredQuestions
+              .where((question) => question.isPublic)
+              .toList();
+          final privateQuestions = filteredQuestions
+              .where((question) => !question.isPublic)
               .toList();
 
           return RefreshIndicator(
@@ -358,25 +516,21 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
                 _buildSearchBar(),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    'Perguntas mais frequentes',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                _buildQuestionSection(
+                  'Perguntas publicas',
+                  'Nenhuma pergunta publica encontrada.',
+                  publicQuestions,
                 ),
-                if (filteredQuestions.isEmpty)
-                  const Text(
-                    'Nenhuma pergunta encontrada.',
-                    style: TextStyle(color: Color(0xFFB7BCC8), fontSize: 14),
-                  )
-                else
-                  ...filteredQuestions.map(_buildQuestionCard),
-                _buildComposer(),
+                if (viewData.canAskPrivateQuestion ||
+                    privateQuestions.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _buildQuestionSection(
+                    'Perguntas privadas',
+                    'Voce ainda nao enviou perguntas privadas para esta startup.',
+                    privateQuestions,
+                  ),
+                ],
+                _buildComposer(viewData.canAskPrivateQuestion),
               ],
             ),
           );
@@ -384,4 +538,14 @@ class _StartupFaqPageState extends State<StartupFaqPage> {
       ),
     );
   }
+}
+
+class _FaqViewData {
+  final StartupDetail detail;
+  final bool canAskPrivateQuestion;
+
+  const _FaqViewData({
+    required this.detail,
+    required this.canAskPrivateQuestion,
+  });
 }

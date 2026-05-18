@@ -16,11 +16,13 @@ class StartupQuestion {
   final String id;
   final String question;
   final String? answer;
+  final bool isPublic;
 
   const StartupQuestion({
     required this.id,
     required this.question,
     required this.answer,
+    required this.isPublic,
   });
 }
 

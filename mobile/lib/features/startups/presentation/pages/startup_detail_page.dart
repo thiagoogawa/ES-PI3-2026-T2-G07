@@ -45,7 +45,10 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
   Future<_StartupDetailViewData> _loadScreenData() async {
     final idToken = await _authRemoteDataSource.getIdToken();
     final results = await Future.wait<dynamic>([
-      _startupsApiDataSource.fetchStartupDetail(widget.startup.id),
+      _startupsApiDataSource.fetchStartupDetailAuthenticated(
+        idToken,
+        widget.startup.id,
+      ),
       _startupTradingApiDataSource.fetchPortfolio(idToken),
     ]);
 

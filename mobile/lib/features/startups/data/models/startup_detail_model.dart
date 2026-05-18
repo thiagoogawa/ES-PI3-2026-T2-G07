@@ -73,6 +73,7 @@ class StartupDetailModel extends StartupDetail {
           id: map['id'] as String? ?? '',
           question: map['pergunta'] as String? ?? '',
           answer: map['resposta'] as String?,
+          isPublic: map['publica'] as bool? ?? true,
         );
       }).toList(),
       updates: updates.map((item) {

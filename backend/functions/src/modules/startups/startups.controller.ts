@@ -18,7 +18,10 @@ export class StartupsController {
   }
 
   static async getById(request: Request, response: Response): Promise<void> {
-    const startup = await StartupsService.getById(request.params.startupId);
+    const startup = await StartupsService.getById(
+      request.params.startupId,
+      request.user,
+    );
 
     response
       .status(HTTP_STATUS.OK)
@@ -31,6 +34,7 @@ export class StartupsController {
   ): Promise<void> {
     const question = await StartupsService.submitQuestion(
       request.params.startupId,
+      request.user,
       request.body ?? {},
     );
 

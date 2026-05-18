@@ -42,7 +42,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
       return null;
     }
 
-    return _startupsApiDataSource.fetchStartupDetail(_selectedStartupId);
+    final idToken = await _authRemoteDataSource.getIdToken();
+
+    return _startupsApiDataSource.fetchStartupDetailAuthenticated(
+      idToken,
+      _selectedStartupId,
+    );
   }
 
   Future<void> _reloadSelectedStartup() async {
@@ -667,6 +672,29 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
                               color: hasAnswer
                                   ? const Color(0xFF89D4A3)
                                   : const Color(0xFFFFC85C),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: question.isPublic
+                                ? const Color(0x332E7DFF)
+                                : const Color(0x338B5CF6),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            question.isPublic ? 'Publica' : 'Privada',
+                            style: TextStyle(
+                              color: question.isPublic
+                                  ? const Color(0xFF84B5FF)
+                                  : const Color(0xFFD3B4FF),
                               fontWeight: FontWeight.w700,
                               fontSize: 11,
                             ),

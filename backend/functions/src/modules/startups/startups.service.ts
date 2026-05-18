@@ -5,6 +5,7 @@ import {ValidationError} from "../../core/errors/validation-error";
 import {HTTP_STATUS} from "../../core/http/http-status";
 import {DecodedIdToken} from "firebase-admin/auth";
 import {FieldValue} from "firebase-admin/firestore";
+import {getOrCreateUserAccount} from "../users/user-account.service";
 import {
   readNumber,
   readRecord,
@@ -128,7 +129,7 @@ export class StartupsService {
       .sort((left, right) => left.name.localeCompare(right.name));
   }
 
-  static async getById(startupId: string) {
+  static async getById(startupId: string, viewer?: DecodedIdToken) {
     const startupRef = startupsCollection.doc(startupId);
     const startupSnapshot = await startupRef.get();
 
@@ -144,12 +145,19 @@ export class StartupsService {
       startupSnapshot.id,
       startupSnapshot.data() ?? {},
     );
+    const canViewPrivateQuestions = await StartupsService.canViewPrivateQuestions(
+      startupId,
+      startupSnapshot.data() ?? {},
+      viewer,
+    );
 
     const [priceHistory, updates, partners, questions] = await Promise.all([
       StartupsService.loadPriceHistory(startupRef.path),
       StartupsService.loadUpdates(startupRef.path),
       StartupsService.loadPartners(startupRef.path),
-      StartupsService.loadQuestions(startupRef.path),
+      StartupsService.loadQuestions(startupRef.path, viewer, {
+        includePrivate: canViewPrivateQuestions,
+      }),
     ]);
 
     return {
@@ -224,18 +232,18 @@ export class StartupsService {
     await questionRef.set(
       {
         resposta: answer,
-        publica: true,
         updatedAt: new Date().toISOString(),
       },
       {merge: true},
     );
 
-    return StartupsService.getById(startupId);
+    return StartupsService.getById(startupId, user);
   }
 
   static async submitQuestion(
     startupId: string,
-    input: {question?: unknown; authorName?: unknown},
+    user: DecodedIdToken | undefined,
+    input: {question?: unknown; authorName?: unknown; public?: unknown},
   ) {
     const startupRef = startupsCollection.doc(startupId);
     const startupSnapshot = await startupRef.get();
@@ -250,6 +258,7 @@ export class StartupsService {
 
     const question = String(input.question ?? "").trim();
     const authorName = String(input.authorName ?? "").trim();
+    const isPublic = input.public === false ? false : true;
 
     if (!question) {
       throw new ValidationError("question is required");
@@ -267,14 +276,33 @@ export class StartupsService {
       throw new ValidationError("authorName must contain at most 80 characters");
     }
 
+    if (!isPublic) {
+      if (!user) {
+        throw new AuthError("Authentication required for private questions");
+      }
+
+      const isInvestor = await StartupsService.isInvestorInStartup(
+        startupId,
+        user,
+      );
+
+      if (!isInvestor) {
+        throw new AuthError(
+          "Only startup investors can send private questions",
+          "PRIVATE_QUESTION_REQUIRES_INVESTOR",
+        );
+      }
+    }
+
     const questionRef = startupRef.collection("perguntas").doc();
     const now = new Date().toISOString();
+    const userId = user?.uid ?? "anonymous";
 
     await questionRef.set({
       pergunta: question,
       resposta: "",
-      publica: true,
-      userId: "anonymous",
+      publica: isPublic,
+      userId,
       autorNome: authorName || null,
       createdAt: now,
       updatedAt: now,
@@ -284,8 +312,8 @@ export class StartupsService {
       id: questionRef.id,
       pergunta: question,
       resposta: "",
-      publica: true,
-      userId: "anonymous",
+      publica: isPublic,
+      userId,
       autorNome: authorName || null,
       createdAt: now,
       updatedAt: now,
@@ -356,7 +384,11 @@ export class StartupsService {
     }
   }
 
-  private static async loadQuestions(startupPath: string) {
+  private static async loadQuestions(
+    startupPath: string,
+    viewer?: DecodedIdToken,
+    options: {includePrivate?: boolean} = {},
+  ) {
     try {
       const snapshot = await adminDb
         .collection(`${startupPath}/perguntas`)
@@ -367,17 +399,64 @@ export class StartupsService {
         return {
           id: doc.id,
           userId: readString(data, "userId") ?? "",
+          autorNome: readString(data, "autorNome"),
           pergunta: readString(data, "pergunta") ?? "",
           resposta: readString(data, "resposta"),
           publica: data.publica === false ? false : true,
           createdAt: toIsoDate(data.createdAt),
         };
-      }).filter((item) => item.publica).sort((left, right) => {
+      }).filter((item) => {
+        if (item.publica) {
+          return true;
+        }
+
+        if (options.includePrivate) {
+          return true;
+        }
+
+        return Boolean(viewer && item.userId == viewer.uid);
+      }).sort((left, right) => {
         return (right.createdAt ?? "").localeCompare(left.createdAt ?? "");
       });
     } catch (_error) {
       return [];
     }
+  }
+
+  private static async canViewPrivateQuestions(
+    startupId: string,
+    startupData: Record<string, unknown>,
+    viewer?: DecodedIdToken,
+  ) {
+    if (!viewer) {
+      return false;
+    }
+
+    if (StartupsService.isStartupAdmin(startupData, viewer.uid)) {
+      return true;
+    }
+
+    return StartupsService.isInvestorInStartup(startupId, viewer);
+  }
+
+  private static isStartupAdmin(
+    startupData: Record<string, unknown>,
+    uid: string,
+  ) {
+    const adminUid = readString(startupData, "adminUid");
+    const admin = readRecord(startupData, "admin") ?? {};
+
+    return adminUid === uid || readString(admin, "uid") === uid;
+  }
+
+  private static async isInvestorInStartup(
+    startupId: string,
+    user: DecodedIdToken,
+  ) {
+    const account = await getOrCreateUserAccount(user);
+    const position = account.portfolio[startupId];
+
+    return (position?.quantity ?? 0) > 0;
   }
 
   private static buildStartupUpdatePayload(input: Record<string, unknown>) {

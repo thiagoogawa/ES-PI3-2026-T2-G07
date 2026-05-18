@@ -24,14 +24,35 @@ class StartupsApiDataSource {
     return StartupDetailModel.fromJson(response);
   }
 
+  Future<StartupDetailModel> fetchStartupDetailAuthenticated(
+    String idToken,
+    String startupId,
+  ) async {
+    final response = await _apiClient.get(
+      ApiConstants.startupDetail(startupId),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    return StartupDetailModel.fromJson(response);
+  }
+
   Future<void> submitQuestion(
     String startupId, {
     required String question,
+    required bool isPublic,
+    String? idToken,
   }) async {
     await _apiClient.post(
       ApiConstants.startupQuestions(startupId),
-      headers: const {'Content-Type': 'application/json'},
-      body: {'question': question},
+      headers: {
+        if (idToken != null && idToken.isNotEmpty)
+          'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body: {'question': question, 'public': isPublic},
     );
   }
 
