@@ -12,7 +12,6 @@ class _EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<_EditProfilePage> {
   final AuthApiDataSource _authApi = AuthApiDataSource(ApiClient());
   final AuthRemoteDataSource _authRemote = AuthRemoteDataSource();
-  final ProfileStorageDataSource _profileStorage = ProfileStorageDataSource();
   final ImagePicker _imagePicker = ImagePicker();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
@@ -85,7 +84,6 @@ class _EditProfilePageState extends State<_EditProfilePage> {
     }
 
     if (value.isEmpty) {
-      await _profileStorage.deleteUserIcon(uid: widget.user.uid);
       return '';
     }
 
@@ -98,7 +96,7 @@ class _EditProfilePageState extends State<_EditProfilePage> {
       throw Exception('Imagem de perfil invalida.');
     }
 
-    return _profileStorage.uploadUserIcon(uid: widget.user.uid, bytes: bytes);
+    return value;
   }
 
   Future<void> _pickProfilePicture() async {

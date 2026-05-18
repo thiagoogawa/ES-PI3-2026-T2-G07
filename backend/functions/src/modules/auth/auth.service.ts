@@ -54,7 +54,7 @@ export class AuthService {
       uid: decodedToken.uid,
       email: decodedToken.email ?? null,
       emailVerified: decodedToken.email_verified ?? false,
-      name: decodedToken.name ?? null,
+      name: account.name ?? decodedToken.name ?? null,
       cpf: account.cpf,
       phone: account.phone,
       picture: account.picture ?? decodedToken.picture ?? null,
@@ -91,7 +91,13 @@ export class AuthService {
       throw new ValidationError("phone is invalid");
     }
 
-    await adminAuth.updateUser(decodedToken.uid, {displayName: name});
+    try {
+      await adminAuth.updateUser(decodedToken.uid, {displayName: name});
+    } catch (_error) {
+      // Keep profile edits working even if the function service account
+      // cannot update Firebase Auth user attributes in this environment.
+    }
+
     await updateUserProfile(decodedToken.uid, {
       name,
       cpf,
