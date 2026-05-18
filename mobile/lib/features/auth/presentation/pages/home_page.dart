@@ -537,18 +537,22 @@ class _HomePageState extends State<HomePage> {
   Widget _buildHeader() {
     return Row(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFF4E5A74),
-          ),
-          child: _ProfileAvatar(
-            picture: _activeUser.picture,
-            initials: _initials(),
-            size: 44,
-            fontSize: 16,
+        GestureDetector(
+          onTap: () => _onDestinationSelected(4),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFF4E5A74),
+            ),
+            child: _ProfileAvatar(
+              picture: _activeUser.picture,
+              initials: _initials(),
+              size: 44,
+              fontSize: 16,
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -1401,6 +1405,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Widget _buildAnimatedSelectedBody(List<Startup> startups) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 240),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        final slideAnimation = Tween<Offset>(
+          begin: const Offset(0.0, 0.03),
+          end: Offset.zero,
+        ).animate(animation);
+
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(position: slideAnimation, child: child),
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey(_selectedIndex),
+        child: _buildSelectedBody(startups),
+      ),
+    );
+  }
+
   Widget _buildCatalog(List<Startup> startups) {
     if (startups.isEmpty) {
       return ListView(
@@ -1541,7 +1568,7 @@ class _HomePageState extends State<HomePage> {
                 );
               }
 
-              return _buildSelectedBody(snapshot.data ?? const []);
+              return _buildAnimatedSelectedBody(snapshot.data ?? const []);
             },
           ),
         ),
