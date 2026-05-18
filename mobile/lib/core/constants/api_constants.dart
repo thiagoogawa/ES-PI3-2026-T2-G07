@@ -30,6 +30,9 @@ class ApiConstants {
   /// Endpoint to retrieve the user's portfolio.
   static const String portfolio = '$baseUrl/v1/portfolio';
 
+  /// Endpoint to add simulated balance to the user's portfolio.
+  static const String portfolioDeposit = '$portfolio/deposit';
+
   /// Endpoint to retrieve portfolio dashboard data (summary, metrics).
   static const String dashboard = '$baseUrl/v1/portfolio/dashboard';
 

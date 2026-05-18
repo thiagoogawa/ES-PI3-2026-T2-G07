@@ -383,6 +383,123 @@ class _HomePageState extends State<HomePage> {
     return portfolio.balance + portfolio.reservedBalance + holdingsValue;
   }
 
+  Future<void> _openPortfolioActions(
+    StartupPortfolioSnapshotModel portfolio,
+  ) async {
+    final action = await showModalBottomSheet<_PortfolioAction>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF17191D),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3A3E46),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Gerenciar patrimonio',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Saldo disponivel: ${_formatCurrency(portfolio.balance)}',
+                  style: const TextStyle(
+                    color: Color(0xFFB7BCC8),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _buildProfileActionTile(
+                  icon: Icons.add_card_rounded,
+                  title: 'Adicionar saldo',
+                  subtitle: 'Credita saldo ficticio para novas negociacoes.',
+                  onTap: () =>
+                      Navigator.of(context).pop(_PortfolioAction.deposit),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    switch (action) {
+      case _PortfolioAction.deposit:
+        await _openDepositAmountPage();
+        break;
+    }
+  }
+
+  Future<void> _openDepositAmountPage() async {
+    final amount = await Navigator.of(context).push<double>(
+      MaterialPageRoute(builder: (_) => const _DepositAmountPage()),
+    );
+
+    if (amount == null || !mounted) {
+      return;
+    }
+
+    try {
+      final idToken = await _authRemote.getIdToken(forceRefresh: true);
+      final updatedPortfolio = await _tradingApi.depositBalance(
+        idToken,
+        amount: amount,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _portfolioFuture = Future.value(updatedPortfolio);
+      });
+
+      showAppSnackBar(
+        context,
+        message: 'Saldo adicionado com sucesso.',
+        type: AppSnackBarType.success,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      showAppSnackBar(
+        context,
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel adicionar saldo agora.',
+        ),
+        type: AppSnackBarType.error,
+      );
+    }
+  }
+
   void _onDestinationSelected(int index) {
     if (_selectedIndex == index) {
       return;
@@ -466,65 +583,82 @@ class _HomePageState extends State<HomePage> {
         ? _formatCurrency(portfolio.balance)
         : 'R\$ ••••••';
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111214),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openPortfolioActions(portfolio),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF21242B)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        child: Ink(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+          decoration: BoxDecoration(
+            color: const Color(0xFF111214),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFF21242B)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Patrimonio',
-                style: TextStyle(
-                  color: Color(0xFFB7BCC8),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+              Row(
+                children: [
+                  const Text(
+                    'Patrimonio',
+                    style: TextStyle(
+                      color: Color(0xFFB7BCC8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isPortfolioBalanceVisible =
+                            !_isPortfolioBalanceVisible;
+                      });
+                    },
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    tooltip: _isPortfolioBalanceVisible
+                        ? 'Ocultar valores'
+                        : 'Mostrar valores',
+                    icon: Icon(
+                      _isPortfolioBalanceVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color(0xFFB7BCC8),
+                      size: 18,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(
+                    Icons.more_horiz_rounded,
+                    color: Color(0xFF6E7581),
+                    size: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                wealthLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _isPortfolioBalanceVisible = !_isPortfolioBalanceVisible;
-                  });
-                },
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                tooltip: _isPortfolioBalanceVisible
-                    ? 'Ocultar valores'
-                    : 'Mostrar valores',
-                icon: Icon(
-                  _isPortfolioBalanceVisible
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                  color: const Color(0xFFB7BCC8),
-                  size: 18,
-                ),
+              const SizedBox(height: 12),
+              Text(
+                'Disponivel para investir: $availableBalanceLabel',
+                style: const TextStyle(color: Color(0xFFD2D6DE), fontSize: 15),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            wealthLabel,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Disponivel para investir: $availableBalanceLabel',
-            style: const TextStyle(color: Color(0xFFD2D6DE), fontSize: 15),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -2308,6 +2442,8 @@ class _EditProfilePageState extends State<_EditProfilePage> {
   }
 }
 
+enum _PortfolioAction { deposit }
+
 class _ProfileAvatar extends StatelessWidget {
   final String? picture;
   final String initials;
@@ -2469,6 +2605,7 @@ class _DepositAmountPageState extends State<_DepositAmountPage> {
                   decoration: InputDecoration(
                     labelText: 'Valor do deposito',
                     hintText: 'Ex.: 10000',
+                    hintStyle: const TextStyle(color: Color(0xFF8B909C)),
                     errorText: _errorText,
                   ),
                   onSubmitted: (_) => _submit(),
