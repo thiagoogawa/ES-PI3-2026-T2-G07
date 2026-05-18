@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/app_snackbar.dart';
 import 'mescla_brand_logo.dart';
 import '../pages/login_page.dart';
 
@@ -46,8 +47,10 @@ Future<void> performLogoutFlow(BuildContext context) async {
     }
 
     Navigator.of(context, rootNavigator: true).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Nao foi possivel sair agora.')),
+    showAppSnackBar(
+      context,
+      message: 'Nao foi possivel sair agora. Tente novamente.',
+      type: AppSnackBarType.error,
     );
     return;
   }

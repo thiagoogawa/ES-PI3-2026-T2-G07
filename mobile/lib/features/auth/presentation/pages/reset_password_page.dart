@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
@@ -42,16 +43,20 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   Future<void> _handleResetPassword() async {
     final email = emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Digite seu e-mail.')));
+        message: 'Digite seu e-mail.',
+        type: AppSnackBarType.error,
+      );
       return;
     }
 
     if (!email.contains('@')) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Digite um e-mail valido.')));
+        message: 'Digite um e-mail valido.',
+        type: AppSnackBarType.error,
+      );
       return;
     }
 
@@ -68,9 +73,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     }
 
     if (controller.errorMessage != null) {
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
+        message: controller.errorMessage!,
+        type: AppSnackBarType.error,
+      );
     }
   }
 

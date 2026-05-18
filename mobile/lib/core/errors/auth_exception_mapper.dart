@@ -28,7 +28,7 @@ String mapAuthException(Object error) {
         return 'Falha de conexao. Verifique sua internet.';
 
       default:
-        return error.message ?? 'Falha ao autenticar no Firebase.';
+        return 'Nao foi possivel concluir a autenticacao. Tente novamente.';
     }
   }
 

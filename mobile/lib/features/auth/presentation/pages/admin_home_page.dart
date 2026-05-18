@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/user_friendly_error_mapper.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/domain/entities/startup_detail.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
@@ -109,7 +111,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
         return;
       }
 
-      _showMessage('$error');
+      _showMessage(
+        mapUserFriendlyError(
+          error,
+          fallbackMessage:
+              'Nao foi possivel atualizar os dados da startup agora.',
+        ),
+        isError: true,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -142,7 +151,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
         return;
       }
 
-      _showMessage('$error');
+      _showMessage(
+        mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel enviar a resposta agora.',
+        ),
+        isError: true,
+      );
     }
   }
 
@@ -150,10 +165,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
     await performLogoutFlow(context);
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(
+  void _showMessage(String message, {bool isError = false}) {
+    showAppSnackBar(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      message: message,
+      type: isError ? AppSnackBarType.error : AppSnackBarType.success,
+    );
   }
 
   @override
@@ -220,7 +237,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '${snapshot.error}',
+                      mapUserFriendlyError(
+                        snapshot.error!,
+                        fallbackMessage:
+                            'Verifique sua conexao e tente novamente.',
+                      ),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFB7BCC8)),
                     ),
@@ -757,8 +778,10 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
   Future<void> _submitAnswer(StartupQuestion question) async {
     final answer = _answerController.text.trim();
     if (answer.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Digite uma resposta antes de publicar.')),
+      showAppSnackBar(
+        context,
+        message: 'Digite uma resposta antes de publicar.',
+        type: AppSnackBarType.error,
       );
       return;
     }

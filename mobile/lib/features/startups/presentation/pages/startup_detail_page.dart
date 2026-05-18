@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/user_friendly_error_mapper.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../auth/data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/startup_trading_api_datasource.dart';
 import '../../data/datasources/startups_api_datasource.dart';
@@ -647,12 +649,11 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
       }
 
       final actionLabel = draft.type == 'buy' ? 'Compra' : 'Venda';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      showAppSnackBar(
+        context,
+        message:
             '$actionLabel enviada: ${_formatQuantity(result.quantity)} token(s) a ${_formatCurrency(result.pricePerToken)}.',
-          ),
-        ),
+        type: AppSnackBarType.success,
       );
       await _reload();
     } catch (error) {
@@ -660,9 +661,14 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
         return;
       }
 
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel enviar a oferta agora.',
+        ),
+        type: AppSnackBarType.error,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -1232,7 +1238,11 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '${snapshot.error}',
+                      mapUserFriendlyError(
+                        snapshot.error!,
+                        fallbackMessage:
+                            'Nao foi possivel carregar os detalhes da startup.',
+                      ),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFB7BCC8)),
                     ),

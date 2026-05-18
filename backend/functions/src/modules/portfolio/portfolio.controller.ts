@@ -37,4 +37,22 @@ export class PortfolioController {
       .status(HTTP_STATUS.OK)
       .json(successResponse(dashboard, "Dashboard fetched successfully"));
   }
+
+  static async depositBalance(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const portfolio = await PortfolioService.depositBalance(
+      request.user,
+      (request.body ?? {}) as Record<string, unknown>,
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(portfolio, "Balance credited successfully"));
+  }
 }
