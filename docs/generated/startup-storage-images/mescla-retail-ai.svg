@@ -1,0 +1,28 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="1030" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B132B"/>
+      <stop offset="0.55" stop-color="#102A43"/>
+      <stop offset="1" stop-color="#164E63"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="230" y1="210" x2="920" y2="920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8BD3FF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#D6F5FF" stop-opacity="0.08"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(914 256) rotate(134.16) scale(513.121)">
+      <stop stop-color="#56CCF2" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#56CCF2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="180" fill="url(#bg)"/>
+  <rect x="86" y="86" width="1028" height="1028" rx="150" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+  <circle cx="914" cy="256" r="320" fill="url(#glow)"/>
+  <circle cx="258" cy="976" r="284" fill="#9EF0FF" fill-opacity="0.08"/>
+  <path d="M160 820C282 675 410 601 546 598C716 594 822 702 1032 594" stroke="#8AE8FF" stroke-opacity="0.42" stroke-width="20" stroke-linecap="round"/>
+  <rect x="184" y="188" width="832" height="832" rx="96" fill="url(#glass)" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+  <g opacity="0.7">
+    <path d="M356 775V420H450L595 614L742 420H836V775H732V565L603 739H585L460 566V775H356Z" fill="white"/>
+  </g>
+  <text x="184" y="962" fill="#F7FBFF" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="700">Mescla Retail AI</text>
+  <text x="184" y="1030" fill="#BDEEFF" font-family="Montserrat, Arial, sans-serif" font-size="34" letter-spacing="0.18em">RETAIL INTELLIGENCE PLATFORM</text>
+</svg>

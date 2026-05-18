@@ -67,6 +67,7 @@ class StartupDetail extends Startup {
   const StartupDetail({
     required super.id,
     required super.name,
+    required super.photoUrl,
     required super.description,
     required super.stage,
     required super.sector,

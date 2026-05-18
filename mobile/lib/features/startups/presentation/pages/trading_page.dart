@@ -5,6 +5,7 @@ import '../../../auth/data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/startup_trading_api_datasource.dart';
 import '../../data/models/startup_portfolio_snapshot_model.dart';
 import '../../domain/entities/startup.dart';
+import '../widgets/startup_logo.dart';
 import 'startup_trade_page.dart';
 
 class TradingPage extends StatefulWidget {
@@ -207,24 +208,13 @@ class _TradingPageState extends State<TradingPage> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF1E2837),
-                    border: Border.all(color: const Color(0xFF32435D)),
-                  ),
-                  child: Center(
-                    child: Text(
-                      startup.name.characters.first.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                StartupLogo(
+                  name: startup.name,
+                  photoUrl: startup.photoUrl,
+                  size: 46,
+                  fontSize: 18,
+                  backgroundColor: const Color(0xFF1E2837),
+                  borderColor: const Color(0xFF32435D),
                 ),
                 const Spacer(),
                 Icon(

@@ -9,6 +9,7 @@ import '../../data/datasources/startups_api_datasource.dart';
 import '../../data/models/startup_portfolio_snapshot_model.dart';
 import '../../domain/entities/startup.dart';
 import '../../domain/entities/startup_detail.dart';
+import '../widgets/startup_logo.dart';
 import 'startup_faq_page.dart';
 
 class StartupDetailPage extends StatefulWidget {
@@ -975,24 +976,13 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
                     ],
                   ),
                 ),
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0x332C76E0),
-                    border: Border.all(color: const Color(0x665E9CFF)),
-                  ),
-                  child: Center(
-                    child: Text(
-                      detail.name.characters.first.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                StartupLogo(
+                  name: detail.name,
+                  photoUrl: detail.photoUrl,
+                  size: 72,
+                  fontSize: 28,
+                  backgroundColor: const Color(0x332C76E0),
+                  borderColor: const Color(0x665E9CFF),
                 ),
               ],
             ),

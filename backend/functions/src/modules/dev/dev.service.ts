@@ -22,6 +22,47 @@ interface SeedDemoInput {
 const startupAId = "Xu2tL6Ap7bIzEdY4ES2r";
 const startupBId = "startup_demo_health_001";
 
+const storageBucket = "mesclainvest-dev.firebasestorage.app";
+const genericStartupPhotoUrl =
+  `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+  `imagens%2Fstartups%2Fstartup-generic.svg?alt=media&token=` +
+  "4c8256ef-1962-4e55-a264-4e1ac4a1aa08";
+
+const startupPhotoUrls: Record<string, string> = {
+  [startupAId]:
+    `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+    `imagens%2Fstartups%2Fmescla-retail-ai.svg?alt=media&token=` +
+    "4b1a95c6-41d2-4f3c-8c0e-12ee3d55aa01",
+  [startupBId]:
+    `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+    `imagens%2Fstartups%2Fbiopulse-health.svg?alt=media&token=` +
+    "1e2bb8d7-1228-4ef5-9ac8-b4de0d91aa02",
+  startup_demo_climate_001:
+    `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+    `imagens%2Fstartups%2Fverdeloop-carbon.svg?alt=media&token=` +
+    "f77b8eed-b8dc-468e-b802-a6f3b86baa03",
+  startup_demo_finance_001:
+    `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+    `imagens%2Fstartups%2Fatlas-finops.svg?alt=media&token=` +
+    "157a1f2e-b612-4fce-aeb5-38db16f6aa04",
+  startup_demo_logistics_001:
+    `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+    `imagens%2Fstartups%2Forbit-cargo.svg?alt=media&token=` +
+    "6c1f5d45-3020-4b11-8f7d-3bcb5790aa05",
+  startup_demo_edtech_001:
+    `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+    `imagens%2Fstartups%2Flumina-edtech.svg?alt=media&token=` +
+    "2a1e96d3-6ab1-4703-ab8f-82a2dd5daa06",
+  startup_demo_energy_001:
+    `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/` +
+    `imagens%2Fstartups%2Fsolis-grid.svg?alt=media&token=` +
+    "8f4f2384-a2c7-4126-b4f7-bb8dd527aa07",
+};
+
+const buildStartupPhotoUrl = (id: string) => {
+  return startupPhotoUrls[id] ?? genericStartupPhotoUrl;
+};
+
 const portfolioToLegacyMap = (
   portfolio: Record<string, PortfolioPosition>,
 ): Record<string, Record<string, unknown>> => {
@@ -110,6 +151,7 @@ export class DevService {
 
     const users = buildSeedUsers(input.users ?? []);
     const [buyer, seller] = users;
+    const existingStartupsSnapshot = await adminDb.collection("startups").get();
 
     const batch = adminDb.batch();
 
@@ -118,10 +160,12 @@ export class DevService {
         id: startupAId,
         data: {
           nome: "Mescla Retail AI",
+          fotoUrl: buildStartupPhotoUrl(startupAId),
           descricao:
             "Plataforma de IA para varejo omnichannel com analytics " +
             "em tempo real.",
           estagio: "expansao",
+          setor: "operacao",
           capitalAportado: 420000,
           totalTokens: 10000,
           tokensDisponiveis: 2500,
@@ -222,9 +266,11 @@ export class DevService {
         id: startupBId,
         data: {
           nome: "BioPulse Health",
+          fotoUrl: buildStartupPhotoUrl(startupBId),
           descricao:
             "Healthtech para monitoramento remoto de pacientes cronicos.",
           estagio: "operacao",
+          setor: "saude",
           capitalAportado: 260000,
           totalTokens: 8000,
           tokensDisponiveis: 1800,
@@ -298,7 +344,444 @@ export class DevService {
           },
         ],
       },
+      {
+        id: "startup_demo_climate_001",
+        data: {
+          nome: "VerdeLoop Carbon",
+          fotoUrl: buildStartupPhotoUrl("startup_demo_climate_001"),
+          descricao:
+            "Climate tech para rastreamento de carbono e monetizacao de creditos ambientais.",
+          estagio: "tracao",
+          setor: "climate tech",
+          capitalAportado: 310000,
+          totalTokens: 9000,
+          tokensDisponiveis: 2200,
+          valorTokenAtual: 9.4,
+          sumarioExecutivo:
+            "Plataforma que integra inventario ESG, auditoria automatizada e marketplace de creditos.",
+          planoNegociosUrl:
+            "https://mesclainvest.example.com/docs/verdeloop-carbon-plano.pdf",
+          pitchDeckUrl:
+            "https://mesclainvest.example.com/docs/verdeloop-carbon-pitch.pdf",
+          videos: [
+            "https://mesclainvest.example.com/videos/verdeloop-carbon-demo.mp4",
+          ],
+          mentores: ["Tatiana Neves", "Rodrigo Pires"],
+          conselho: ["Marcelo Teixeira"],
+          variacao: {
+            diaria: 2.1,
+            semanal: 5.8,
+            mensal: 11.4,
+            seisMeses: 18.2,
+            ytd: 14.9,
+          },
+          createdAt: ninetyDaysAgo,
+          updatedAt: now,
+        },
+        socios: [
+          {id: "socio_001", nome: "Camila Azevedo", participacao: 58},
+          {id: "socio_002", nome: "Diego Luz", participacao: 42},
+        ],
+        perguntas: [
+          {
+            id: "pergunta_001",
+            userId: buyer.uid,
+            pergunta: "Qual o volume anual de ativos monitorados?",
+            resposta: "Mais de 1,8 milhao de toneladas ja passam pela plataforma.",
+            publica: true,
+            createdAt: sevenDaysAgo,
+          },
+        ],
+        historicoPrecos: [
+          {
+            id: "registro_001",
+            preco: 8.1,
+            timestamp: ninetyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_002",
+            preco: 8.8,
+            timestamp: thirtyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_003",
+            preco: 9.4,
+            timestamp: now,
+            origem: "seed",
+            transacaoId: null,
+          },
+        ],
+        atualizacoes: [
+          {
+            id: "atualizacao_001",
+            titulo: "Nova integracao com ERPs industriais",
+            conteudo:
+              "A startup passou a consolidar dados de emissao direto de operacoes fabris.",
+            tipo: "produto",
+            data: oneDayAgo,
+            publica: true,
+          },
+        ],
+      },
+      {
+        id: "startup_demo_finance_001",
+        data: {
+          nome: "Atlas FinOps",
+          fotoUrl: buildStartupPhotoUrl("startup_demo_finance_001"),
+          descricao:
+            "Fintech B2B para gestao de caixa, cobranca e conciliacao automatizada para PMEs.",
+          estagio: "expansao",
+          setor: "fintech",
+          capitalAportado: 540000,
+          totalTokens: 12000,
+          tokensDisponiveis: 3600,
+          valorTokenAtual: 13.7,
+          sumarioExecutivo:
+            "Motor financeiro com regras configuraveis para previsao de caixa e recuperacao de inadimplencia.",
+          planoNegociosUrl:
+            "https://mesclainvest.example.com/docs/atlas-finops-plano.pdf",
+          pitchDeckUrl:
+            "https://mesclainvest.example.com/docs/atlas-finops-pitch.pdf",
+          videos: [
+            "https://mesclainvest.example.com/videos/atlas-finops-demo.mp4",
+          ],
+          mentores: ["Sergio Moraes"],
+          conselho: ["Mariana Lopes", "Gustavo Faria"],
+          variacao: {
+            diaria: -1.4,
+            semanal: 3.2,
+            mensal: 6.5,
+            seisMeses: 15.1,
+            ytd: 12.3,
+          },
+          createdAt: ninetyDaysAgo,
+          updatedAt: now,
+        },
+        socios: [
+          {id: "socio_001", nome: "Brenda Sales", participacao: 62},
+          {id: "socio_002", nome: "Icaro Motta", participacao: 38},
+        ],
+        perguntas: [
+          {
+            id: "pergunta_001",
+            userId: seller.uid,
+            pergunta: "Qual a taxa media de inadimplencia apos o onboarding?",
+            resposta: "Clientes ativos reduzem em media 23% da inadimplencia em 90 dias.",
+            publica: true,
+            createdAt: oneDayAgo,
+          },
+        ],
+        historicoPrecos: [
+          {
+            id: "registro_001",
+            preco: 12.2,
+            timestamp: ninetyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_002",
+            preco: 13.1,
+            timestamp: thirtyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_003",
+            preco: 13.7,
+            timestamp: now,
+            origem: "seed",
+            transacaoId: null,
+          },
+        ],
+        atualizacoes: [
+          {
+            id: "atualizacao_001",
+            titulo: "Motor de cobranca preditiva liberado",
+            conteudo:
+              "A companhia ativou um modulo de cobranca com segmentacao por risco.",
+            tipo: "produto",
+            data: sevenDaysAgo,
+            publica: true,
+          },
+        ],
+      },
+      {
+        id: "startup_demo_logistics_001",
+        data: {
+          nome: "Orbit Cargo",
+          fotoUrl: buildStartupPhotoUrl("startup_demo_logistics_001"),
+          descricao:
+            "Logtech de roteirizacao dinamica e consolidacao de cargas urbanas para e-commerce.",
+          estagio: "operacao",
+          setor: "logistica",
+          capitalAportado: 470000,
+          totalTokens: 11000,
+          tokensDisponiveis: 3100,
+          valorTokenAtual: 11.2,
+          sumarioExecutivo:
+            "Camada operacional para reduzir ociosidade de frota e aumentar previsibilidade de entregas.",
+          planoNegociosUrl:
+            "https://mesclainvest.example.com/docs/orbit-cargo-plano.pdf",
+          pitchDeckUrl:
+            "https://mesclainvest.example.com/docs/orbit-cargo-pitch.pdf",
+          videos: [
+            "https://mesclainvest.example.com/videos/orbit-cargo-demo.mp4",
+          ],
+          mentores: ["Rita Muniz"],
+          conselho: ["Alexandre Paiva", "Nadia Ferraz"],
+          variacao: {
+            diaria: 0.9,
+            semanal: 2.4,
+            mensal: 7.1,
+            seisMeses: 9.8,
+            ytd: 8.5,
+          },
+          createdAt: ninetyDaysAgo,
+          updatedAt: now,
+        },
+        socios: [
+          {id: "socio_001", nome: "Henrique Campos", participacao: 51},
+          {id: "socio_002", nome: "Priscila Melo", participacao: 49},
+        ],
+        perguntas: [
+          {
+            id: "pergunta_001",
+            userId: buyer.uid,
+            pergunta: "Qual foi a reducao media no custo por entrega?",
+            resposta: "A media consolidada esta em 17% nas operacoes recorrentes.",
+            publica: true,
+            createdAt: sevenDaysAgo,
+          },
+        ],
+        historicoPrecos: [
+          {
+            id: "registro_001",
+            preco: 10.4,
+            timestamp: ninetyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_002",
+            preco: 10.9,
+            timestamp: thirtyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_003",
+            preco: 11.2,
+            timestamp: now,
+            origem: "seed",
+            transacaoId: null,
+          },
+        ],
+        atualizacoes: [
+          {
+            id: "atualizacao_001",
+            titulo: "Expansao para hubs regionais",
+            conteudo:
+              "A malha logistica passou a operar em dois novos hubs urbanos.",
+            tipo: "operacional",
+            data: oneDayAgo,
+            publica: true,
+          },
+        ],
+      },
+      {
+        id: "startup_demo_edtech_001",
+        data: {
+          nome: "Lumina EdTech",
+          fotoUrl: buildStartupPhotoUrl("startup_demo_edtech_001"),
+          descricao:
+            "Edtech com trilhas adaptativas para formacao tecnica e onboarding corporativo.",
+          estagio: "tracao",
+          setor: "educacao",
+          capitalAportado: 280000,
+          totalTokens: 7000,
+          tokensDisponiveis: 1900,
+          valorTokenAtual: 8.6,
+          sumarioExecutivo:
+            "Ambiente de aprendizagem com motor adaptativo e analytics de progresso em tempo real.",
+          planoNegociosUrl:
+            "https://mesclainvest.example.com/docs/lumina-edtech-plano.pdf",
+          pitchDeckUrl:
+            "https://mesclainvest.example.com/docs/lumina-edtech-pitch.pdf",
+          videos: [
+            "https://mesclainvest.example.com/videos/lumina-edtech-demo.mp4",
+          ],
+          mentores: ["Claudia Freitas"],
+          conselho: ["Fernando Rocha"],
+          variacao: {
+            diaria: 3.4,
+            semanal: 6.8,
+            mensal: 10.6,
+            seisMeses: 16.9,
+            ytd: 15.7,
+          },
+          createdAt: ninetyDaysAgo,
+          updatedAt: now,
+        },
+        socios: [
+          {id: "socio_001", nome: "Renata Peixoto", participacao: 64},
+          {id: "socio_002", nome: "Thiago Bernardes", participacao: 36},
+        ],
+        perguntas: [
+          {
+            id: "pergunta_001",
+            userId: seller.uid,
+            pergunta: "Quantos alunos corporativos usam a plataforma?",
+            resposta: "A base ativa superou 48 mil usuarios no ultimo trimestre.",
+            publica: true,
+            createdAt: oneDayAgo,
+          },
+        ],
+        historicoPrecos: [
+          {
+            id: "registro_001",
+            preco: 7.4,
+            timestamp: ninetyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_002",
+            preco: 8.0,
+            timestamp: thirtyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_003",
+            preco: 8.6,
+            timestamp: now,
+            origem: "seed",
+            transacaoId: null,
+          },
+        ],
+        atualizacoes: [
+          {
+            id: "atualizacao_001",
+            titulo: "Nova trilha para operacoes industriais",
+            conteudo:
+              "Foi liberado um pacote de cursos tecnicos voltado a times de manufatura.",
+            tipo: "conteudo",
+            data: sevenDaysAgo,
+            publica: true,
+          },
+        ],
+      },
+      {
+        id: "startup_demo_energy_001",
+        data: {
+          nome: "Solis Grid",
+          fotoUrl: buildStartupPhotoUrl("startup_demo_energy_001"),
+          descricao:
+            "Energy tech para gestao de microredes solares e previsao de consumo em condominios e empresas.",
+          estagio: "expansao",
+          setor: "energia",
+          capitalAportado: 630000,
+          totalTokens: 15000,
+          tokensDisponiveis: 4700,
+          valorTokenAtual: 14.3,
+          sumarioExecutivo:
+            "Infraestrutura de software para orquestrar geracao distribuida, armazenamento e eficiencia energetica.",
+          planoNegociosUrl:
+            "https://mesclainvest.example.com/docs/solis-grid-plano.pdf",
+          pitchDeckUrl:
+            "https://mesclainvest.example.com/docs/solis-grid-pitch.pdf",
+          videos: [
+            "https://mesclainvest.example.com/videos/solis-grid-demo.mp4",
+          ],
+          mentores: ["Vicente Braga", "Paula Arantes"],
+          conselho: ["Cristiane Nogueira"],
+          variacao: {
+            diaria: -0.6,
+            semanal: 4.4,
+            mensal: 9.7,
+            seisMeses: 17.6,
+            ytd: 13.8,
+          },
+          createdAt: ninetyDaysAgo,
+          updatedAt: now,
+        },
+        socios: [
+          {id: "socio_001", nome: "Leandro Couto", participacao: 57},
+          {id: "socio_002", nome: "Monica Reis", participacao: 43},
+        ],
+        perguntas: [
+          {
+            id: "pergunta_001",
+            userId: buyer.uid,
+            pergunta: "Qual a capacidade instalada gerenciada?",
+            resposta: "A operacao monitora 86 MW em ativos distribuidos.",
+            publica: true,
+            createdAt: sevenDaysAgo,
+          },
+        ],
+        historicoPrecos: [
+          {
+            id: "registro_001",
+            preco: 12.9,
+            timestamp: ninetyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_002",
+            preco: 13.6,
+            timestamp: thirtyDaysAgo,
+            origem: "seed",
+            transacaoId: null,
+          },
+          {
+            id: "registro_003",
+            preco: 14.3,
+            timestamp: now,
+            origem: "seed",
+            transacaoId: null,
+          },
+        ],
+        atualizacoes: [
+          {
+            id: "atualizacao_001",
+            titulo: "Primeira microrede comercial entregue",
+            conteudo:
+              "O time concluiu a implantacao completa da primeira microrede multiunidade.",
+            tipo: "implantacao",
+            data: oneDayAgo,
+            publica: true,
+          },
+        ],
+      },
     ];
+
+    existingStartupsSnapshot.docs.forEach((doc) => {
+      const source = doc.data();
+      const hasPhoto =
+        typeof source.fotoUrl === "string" ||
+        typeof source.photoUrl === "string" ||
+        typeof source.imageUrl === "string" ||
+        typeof source.logoUrl === "string";
+
+      if (hasPhoto) {
+        return;
+      }
+
+      batch.set(
+        doc.ref,
+        {
+          fotoUrl: buildStartupPhotoUrl(doc.id),
+          updatedAt: now,
+        },
+        {merge: true},
+      );
+    });
 
     startupDocs.forEach((startup) => {
       batch.set(adminDb.collection("startups").doc(startup.id), startup.data, {

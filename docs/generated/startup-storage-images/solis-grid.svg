@@ -1,0 +1,31 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="130" y1="78" x2="1054" y2="1120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B0A0A"/>
+      <stop offset="0.55" stop-color="#9A3412"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(760 352) rotate(90) scale(320 320)">
+      <stop stop-color="#FFF6BF"/>
+      <stop offset="1" stop-color="#FFF6BF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="180" fill="url(#bg)"/>
+  <circle cx="760" cy="352" r="218" fill="url(#sun)"/>
+  <rect x="184" y="184" width="832" height="832" rx="112" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+  <circle cx="760" cy="352" r="92" fill="#FFF8D6"/>
+  <path d="M760 188V96" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M760 608V516" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M596 352H504" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M1016 352H924" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M641 233L575 167" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M945 537L879 471" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M879 233L945 167" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M575 537L641 471" stroke="#FFE7A3" stroke-width="16" stroke-linecap="round"/>
+  <path d="M310 760H890" stroke="#FFF1C2" stroke-width="18" stroke-linecap="round"/>
+  <path d="M360 760L452 542L544 760" stroke="#FFF1C2" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M562 760L654 492L746 760" stroke="#FFF1C2" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M764 760L856 584L948 760" stroke="#FFF1C2" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="184" y="962" fill="#FFFDF7" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="700">Solis Grid</text>
+  <text x="184" y="1030" fill="#FFE4A8" font-family="Montserrat, Arial, sans-serif" font-size="34" letter-spacing="0.18em">SOLAR MICROGRID INTELLIGENCE</text>
+</svg>

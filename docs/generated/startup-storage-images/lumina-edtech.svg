@@ -1,0 +1,26 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="146" y1="88" x2="1044" y2="1124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2E1065"/>
+      <stop offset="0.55" stop-color="#5B21B6"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(820 268) rotate(140.502) scale(500.011)">
+      <stop stop-color="#F9A8D4" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#F9A8D4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="180" fill="url(#bg)"/>
+  <circle cx="820" cy="268" r="280" fill="url(#glow)"/>
+  <rect x="184" y="184" width="832" height="832" rx="112" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+  <path d="M302 720L600 486L898 720" stroke="#FCE7F3" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M402 560L600 404L798 560V778C798 805 776 828 748 828H452C424 828 402 805 402 778V560Z" fill="#FFF7FB" fill-opacity="0.92"/>
+  <path d="M486 540H714V596H486V540Z" fill="#C026D3" fill-opacity="0.88"/>
+  <path d="M486 632H714V688H486V632Z" fill="#DB2777" fill-opacity="0.78"/>
+  <path d="M486 724H640V780H486V724Z" fill="#7C3AED" fill-opacity="0.82"/>
+  <circle cx="830" cy="400" r="58" fill="#FFF1F7" fill-opacity="0.9"/>
+  <path d="M830 354V446" stroke="#EC4899" stroke-width="16" stroke-linecap="round"/>
+  <path d="M784 400H876" stroke="#EC4899" stroke-width="16" stroke-linecap="round"/>
+  <text x="184" y="962" fill="#FFF7FC" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="700">Lumina EdTech</text>
+  <text x="184" y="1030" fill="#FFD7EB" font-family="Montserrat, Arial, sans-serif" font-size="34" letter-spacing="0.18em">ADAPTIVE LEARNING EXPERIENCE</text>
+</svg>

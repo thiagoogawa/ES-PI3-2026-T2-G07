@@ -46,6 +46,7 @@ const normalizeStartup = (
   return {
     id,
     name,
+    photoUrl: readString(source, "fotoUrl", "photoUrl", "imageUrl", "logoUrl"),
     description: readString(source, "descricao", "description") ?? "",
     stage: readString(source, "estagio", "stage") ?? "Nao informado",
     sector: readString(source, "setor", "sector"),
@@ -384,6 +385,7 @@ export class StartupsService {
     const description = String(input.description ?? "").trim();
     const stage = String(input.stage ?? "").trim();
     const sector = String(input.sector ?? "").trim();
+    const photoUrl = String(input.photoUrl ?? input.imageUrl ?? "").trim();
     const executiveSummary = String(input.executiveSummary ?? "").trim();
     const businessPlanUrl = String(input.businessPlanUrl ?? "").trim();
     const pitchDeckUrl = String(input.pitchDeckUrl ?? "").trim();
@@ -408,6 +410,7 @@ export class StartupsService {
       descricao: description,
       estagio: stage,
       setor: sector || null,
+      fotoUrl: photoUrl || null,
       sumarioExecutivo: executiveSummary,
       planoNegociosUrl: businessPlanUrl || null,
       pitchDeckUrl: pitchDeckUrl || null,

@@ -1,6 +1,7 @@
 class Startup {
   final String id;
   final String name;
+  final String? photoUrl;
   final String description;
   final String stage;
   final String? sector;
@@ -11,6 +12,7 @@ class Startup {
   const Startup({
     required this.id,
     required this.name,
+    required this.photoUrl,
     required this.description,
     required this.stage,
     required this.sector,

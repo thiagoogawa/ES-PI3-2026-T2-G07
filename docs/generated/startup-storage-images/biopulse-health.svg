@@ -1,0 +1,25 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="188" y1="58" x2="1040" y2="1132" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#120F2B"/>
+      <stop offset="0.58" stop-color="#271C4D"/>
+      <stop offset="1" stop-color="#4C1D95"/>
+    </linearGradient>
+    <radialGradient id="heartGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(630 408) rotate(90) scale(430 430)">
+      <stop stop-color="#FF98B5" stop-opacity="0.52"/>
+      <stop offset="1" stop-color="#FF98B5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="180" fill="url(#bg)"/>
+  <circle cx="630" cy="408" r="292" fill="url(#heartGlow)"/>
+  <path d="M225 829C330 695 438 628 547 628C667 628 766 701 975 593" stroke="#F9A8D4" stroke-opacity="0.4" stroke-width="18" stroke-linecap="round" stroke-dasharray="16 20"/>
+  <path d="M598 332C641 261 742 247 790 314C845 391 798 492 598 644C398 492 351 391 406 314C454 247 555 261 598 332Z" fill="#FFE5EF" fill-opacity="0.95"/>
+  <path d="M568 456H626V530H701V588H626V663H568V588H493V530H568V456Z" fill="#7C3AED"/>
+  <g opacity="0.75">
+    <rect x="184" y="184" width="832" height="832" rx="110" stroke="rgba(255,255,255,0.16)" stroke-width="2"/>
+    <circle cx="258" cy="246" r="88" fill="#FBCFE8" fill-opacity="0.08"/>
+    <circle cx="940" cy="980" r="140" fill="#DDD6FE" fill-opacity="0.08"/>
+  </g>
+  <text x="184" y="962" fill="#FFF7FB" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="700">BioPulse Health</text>
+  <text x="184" y="1030" fill="#F5C5E0" font-family="Montserrat, Arial, sans-serif" font-size="34" letter-spacing="0.18em">CONNECTED CARE ANALYTICS</text>
+</svg>

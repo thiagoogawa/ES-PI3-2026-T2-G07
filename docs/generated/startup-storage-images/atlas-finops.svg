@@ -1,0 +1,25 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="92" x2="1068" y2="1138" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A1F3C"/>
+      <stop offset="0.6" stop-color="#283C86"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="bars" x1="374" y1="356" x2="828" y2="782" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E0F2FE"/>
+      <stop offset="1" stop-color="#BFDBFE"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="180" fill="url(#bg)"/>
+  <rect x="182" y="182" width="836" height="836" rx="110" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+  <circle cx="920" cy="250" r="180" fill="#60A5FA" fill-opacity="0.2"/>
+  <path d="M278 760L430 608L540 692L770 456L922 590" stroke="#DCEEFF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M374 782V512H470V782H374Z" fill="url(#bars)"/>
+  <path d="M552 782V420H648V782H552Z" fill="url(#bars)"/>
+  <path d="M730 782V328H826V782H730Z" fill="url(#bars)"/>
+  <circle cx="430" cy="608" r="24" fill="#F8FAFC"/>
+  <circle cx="540" cy="692" r="24" fill="#F8FAFC"/>
+  <circle cx="770" cy="456" r="24" fill="#F8FAFC"/>
+  <text x="184" y="962" fill="#F8FBFF" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="700">Atlas FinOps</text>
+  <text x="184" y="1030" fill="#D3E6FF" font-family="Montserrat, Arial, sans-serif" font-size="34" letter-spacing="0.18em">B2B CASHFLOW OPERATING SYSTEM</text>
+</svg>

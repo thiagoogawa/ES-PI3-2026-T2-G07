@@ -16,6 +16,7 @@ import '../../../startups/data/models/startup_portfolio_snapshot_model.dart';
 import '../../../startups/domain/entities/startup.dart';
 import '../../../startups/presentation/pages/startup_detail_page.dart';
 import '../../../startups/presentation/pages/trading_page.dart';
+import '../../../startups/presentation/widgets/startup_logo.dart';
 
 class HomePage extends StatefulWidget {
   final AuthenticatedUser user;
@@ -963,24 +964,13 @@ class _HomePageState extends State<HomePage> {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF204D96),
-                      border: Border.all(color: const Color(0xFF5E9CFF)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        startup.name.characters.first.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
+                  StartupLogo(
+                    name: startup.name,
+                    photoUrl: startup.photoUrl,
+                    size: 38,
+                    fontSize: 17,
+                    backgroundColor: const Color(0xFF204D96),
+                    borderColor: const Color(0xFF5E9CFF),
                   ),
                   const Spacer(),
                   Icon(
@@ -1088,23 +1078,14 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF204D96),
-                      ),
-                      child: Center(
-                        child: Text(
-                          startup.name.characters.first.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
+                    StartupLogo(
+                      name: startup.name,
+                      photoUrl: startup.photoUrl,
+                      size: 46,
+                      fontSize: 20,
+                      backgroundColor: const Color(0xFF204D96),
+                      borderColor: const Color(0xFF204D96),
+                      borderWidth: 0,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

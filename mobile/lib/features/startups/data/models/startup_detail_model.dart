@@ -4,6 +4,7 @@ class StartupDetailModel extends StartupDetail {
   const StartupDetailModel({
     required super.id,
     required super.name,
+    required super.photoUrl,
     required super.description,
     required super.stage,
     required super.sector,
@@ -37,6 +38,7 @@ class StartupDetailModel extends StartupDetail {
     return StartupDetailModel(
       id: data['id'] as String,
       name: data['name'] as String? ?? 'Startup',
+      photoUrl: data['photoUrl'] as String?,
       description: data['description'] as String? ?? '',
       stage: data['stage'] as String? ?? 'Nao informado',
       sector: data['sector'] as String?,

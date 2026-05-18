@@ -4,6 +4,7 @@ class StartupModel extends Startup {
   const StartupModel({
     required super.id,
     required super.name,
+    required super.photoUrl,
     required super.description,
     required super.stage,
     required super.sector,
@@ -18,6 +19,7 @@ class StartupModel extends Startup {
     return StartupModel(
       id: json['id'] as String,
       name: json['name'] as String? ?? 'Startup',
+      photoUrl: json['photoUrl'] as String?,
       description: json['description'] as String? ?? '',
       stage: json['stage'] as String? ?? 'Nao informado',
       sector: json['sector'] as String?,

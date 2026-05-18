@@ -1,0 +1,21 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="118" y1="70" x2="1048" y2="1130" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#052E2B"/>
+      <stop offset="0.55" stop-color="#0B5D4F"/>
+      <stop offset="1" stop-color="#1A7F64"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(840 260) rotate(140) scale(540 540)">
+      <stop stop-color="#99F6E4" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#99F6E4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="180" fill="url(#bg)"/>
+  <circle cx="840" cy="260" r="300" fill="url(#glow)"/>
+  <path d="M358 734C330 605 386 449 522 368C663 284 835 323 928 466C1017 602 1002 766 889 858C778 948 606 968 468 908" stroke="#D1FAE5" stroke-opacity="0.72" stroke-width="24" stroke-linecap="round"/>
+  <path d="M584 344C505 426 480 535 516 644C560 781 670 851 814 854C747 926 633 950 519 915C362 867 268 720 285 567C302 417 424 287 576 255C682 233 790 267 868 337C764 327 661 335 584 344Z" fill="#E7FFF6" fill-opacity="0.92"/>
+  <path d="M654 454C607 503 594 566 620 631C652 709 722 747 812 748C770 793 699 808 628 786C529 754 470 662 481 566C492 471 570 390 665 369C732 354 800 376 849 420C783 413 718 419 654 454Z" fill="#0F766E"/>
+  <rect x="184" y="184" width="832" height="832" rx="108" stroke="rgba(255,255,255,0.16)" stroke-width="2"/>
+  <text x="184" y="962" fill="#F3FFF9" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="700">VerdeLoop Carbon</text>
+  <text x="184" y="1030" fill="#BAF7E0" font-family="Montserrat, Arial, sans-serif" font-size="34" letter-spacing="0.18em">CLIMATE DATA AND CARBON MARKET</text>
+</svg>

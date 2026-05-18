@@ -1,0 +1,26 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="106" y1="80" x2="1040" y2="1140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#211C14"/>
+      <stop offset="0.55" stop-color="#52361E"/>
+      <stop offset="1" stop-color="#A16207"/>
+    </linearGradient>
+    <linearGradient id="road" x1="334" y1="432" x2="870" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF3C4"/>
+      <stop offset="1" stop-color="#FDE68A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="180" fill="url(#bg)"/>
+  <rect x="184" y="184" width="832" height="832" rx="110" stroke="rgba(255,255,255,0.16)" stroke-width="2"/>
+  <circle cx="926" cy="256" r="196" fill="#FCD34D" fill-opacity="0.18"/>
+  <path d="M320 774C410 718 518 690 622 648C733 603 820 524 892 396" stroke="#FFF8DB" stroke-width="18" stroke-linecap="round" stroke-dasharray="12 18"/>
+  <path d="M344 752C444 682 527 646 642 610C736 580 818 513 884 410" stroke="#FDE68A" stroke-width="78" stroke-linecap="round"/>
+  <path d="M436 648L604 540" stroke="#7C4A06" stroke-width="12" stroke-linecap="round"/>
+  <path d="M518 760L692 640" stroke="#7C4A06" stroke-width="12" stroke-linecap="round"/>
+  <rect x="332" y="432" width="208" height="140" rx="28" fill="url(#road)"/>
+  <rect x="508" y="468" width="170" height="104" rx="20" fill="#FEF3C7"/>
+  <circle cx="400" cy="590" r="34" fill="#1F2937"/>
+  <circle cx="620" cy="590" r="34" fill="#1F2937"/>
+  <text x="184" y="962" fill="#FFFDF7" font-family="Montserrat, Arial, sans-serif" font-size="78" font-weight="700">Orbit Cargo</text>
+  <text x="184" y="1030" fill="#FFE8A3" font-family="Montserrat, Arial, sans-serif" font-size="34" letter-spacing="0.18em">SMART URBAN FREIGHT NETWORK</text>
+</svg>
