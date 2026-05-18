@@ -17,6 +17,9 @@
       ]
     }
   ],
+  "storage": {
+    "rules": "storage.rules"
+  },
   "auth": {
     "providers": {}
   },
