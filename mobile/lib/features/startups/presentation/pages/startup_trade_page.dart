@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/user_friendly_error_mapper.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../auth/data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/startup_trading_api_datasource.dart';
 import '../../data/models/startup_offer_model.dart';
@@ -304,18 +306,25 @@ class _StartupTradePageState extends State<StartupTradePage> {
         );
       }
 
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text(message.toString())));
+        message: message.toString(),
+        type: AppSnackBarType.success,
+      );
       await _reload();
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel enviar a ordem agora.',
+        ),
+        type: AppSnackBarType.error,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -379,12 +388,11 @@ class _StartupTradePageState extends State<StartupTradePage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      showAppSnackBar(
+        context,
+        message:
             'Transacao executada: ${_formatQuantity(result.quantity)} token(s) em ${_formatCurrency(result.pricePerToken)}.',
-          ),
-        ),
+        type: AppSnackBarType.success,
       );
       await _reload();
     } catch (error) {
@@ -392,9 +400,14 @@ class _StartupTradePageState extends State<StartupTradePage> {
         return;
       }
 
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel aceitar a oferta agora.',
+        ),
+        type: AppSnackBarType.error,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -459,8 +472,10 @@ class _StartupTradePageState extends State<StartupTradePage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Oferta cancelada com sucesso.')),
+      showAppSnackBar(
+        context,
+        message: 'Oferta cancelada com sucesso.',
+        type: AppSnackBarType.success,
       );
       await _reload();
     } catch (error) {
@@ -468,9 +483,14 @@ class _StartupTradePageState extends State<StartupTradePage> {
         return;
       }
 
-      ScaffoldMessenger.of(
+      showAppSnackBar(
         context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+        message: mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel cancelar a oferta agora.',
+        ),
+        type: AppSnackBarType.error,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -819,7 +839,11 @@ class _StartupTradePageState extends State<StartupTradePage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '${snapshot.error}',
+                      mapUserFriendlyError(
+                        snapshot.error!,
+                        fallbackMessage:
+                            'Nao foi possivel carregar esta negociacao agora.',
+                      ),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFB7BCC8)),
                     ),

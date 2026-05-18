@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/user_friendly_error_mapper.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../auth/data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/startup_trading_api_datasource.dart';
@@ -462,7 +463,11 @@ class _TradingPageState extends State<TradingPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${snapshot.error}',
+                    mapUserFriendlyError(
+                      snapshot.error!,
+                      fallbackMessage:
+                          'Nao foi possivel carregar o mercado agora.',
+                    ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Color(0xFFB7BCC8)),
                   ),

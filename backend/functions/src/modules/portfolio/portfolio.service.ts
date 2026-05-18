@@ -1,6 +1,8 @@
 import {DecodedIdToken} from "firebase-admin/auth";
 import {adminDb} from "../../config/firebase-admin";
+import {ValidationError} from "../../core/errors/validation-error";
 import {
+  creditUserBalance,
   getOrCreateUserAccount,
 } from "../users/user-account.service";
 import {readNumber, readString, toIsoDate} from "../../utils/firestore-helpers";
@@ -103,6 +105,22 @@ export class PortfolioService {
       positions: portfolio.positions,
       timeline,
     };
+  }
+
+  static async depositBalance(
+    decodedToken: DecodedIdToken,
+    input: Record<string, unknown>,
+  ) {
+    const rawAmount = input.amount;
+    const amount = typeof rawAmount === "number" ? rawAmount : Number(rawAmount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new ValidationError("amount must be a positive number");
+    }
+
+    await creditUserBalance(decodedToken.uid, amount);
+
+    return PortfolioService.getPortfolio(decodedToken);
   }
 
   private static async buildPositions(
