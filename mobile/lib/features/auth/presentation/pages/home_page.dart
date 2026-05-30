@@ -1,3 +1,10 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+/// Lucca Schroelder Scovini - RA: 24011609
+///
+/// Tela principal do investidor autenticado.
+/// Consolida saldo, portfolio, atalhos e secoes auxiliares que
+/// compartilham o mesmo estado da home.
+
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';

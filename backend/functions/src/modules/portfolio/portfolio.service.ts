@@ -1,3 +1,12 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ * Lucca Schroelder Scovini - RA: 24011609
+ *
+ * Service do modulo de portfolio.
+ * Concentra regras de negocio, acesso a dados e validacoes
+ * necessarias antes de responder aos endpoints da API.
+ */
+
 import {DecodedIdToken} from "firebase-admin/auth";
 import {adminDb} from "../../config/firebase-admin";
 import {ValidationError} from "../../core/errors/validation-error";

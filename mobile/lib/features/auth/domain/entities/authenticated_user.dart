@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Entidade de dominio do fluxo de autenticacao.
+/// Representa dados relevantes do usuario autenticado e mantem o
+/// contrato limpo entre as camadas de dominio e apresentacao.
+
 class ManagedStartup {
   final String id;
   final String name;

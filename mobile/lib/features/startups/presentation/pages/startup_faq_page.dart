@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela de perguntas e respostas da startup.
+/// Exibe a FAQ publica e permite acompanhar o historico de
+/// questoes enviadas pelos investidores.
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/errors/user_friendly_error_mapper.dart';

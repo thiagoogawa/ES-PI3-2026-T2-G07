@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Modelo de dados do modulo de startups.
+/// Converte payloads da API em estruturas adequadas para consumo
+/// pela camada de dominio e pelas telas do app.
+
 import '../../domain/entities/startup_detail.dart';
 
 class StartupDetailModel extends StartupDetail {

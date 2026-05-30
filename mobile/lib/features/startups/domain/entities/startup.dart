@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Entidade de dominio do marketplace de startups.
+/// Representa as informacoes essenciais usadas nas regras de
+/// negocio e na apresentacao para investimento.
+
 class Startup {
   final String id;
   final String name;

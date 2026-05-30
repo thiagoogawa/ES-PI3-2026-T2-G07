@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela principal do administrador de startup.
+/// Reune indicadores, atalhos e operacoes de gestao para quem
+/// administra uma ou mais startups na plataforma.
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/errors/user_friendly_error_mapper.dart';

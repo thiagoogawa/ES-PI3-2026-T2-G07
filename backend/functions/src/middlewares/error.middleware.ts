@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Middleware central de tratamento de erros.
+ * Converte excecoes lancadas pela aplicacao em respostas HTTP
+ * padronizadas para o cliente.
+ */
+
 import {NextFunction, Request, Response} from "express";
 import * as logger from "firebase-functions/logger";
 import {AppError} from "../core/errors/app-error";

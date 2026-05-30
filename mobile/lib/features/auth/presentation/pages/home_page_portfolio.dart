@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Parte da implementacao da home dedicada ao portfolio.
+/// Organiza a exibicao das posicoes do usuario dentro da tela
+/// principal do investidor.
+
 part of 'home_page.dart';
 
 class _PortfolioSlice {

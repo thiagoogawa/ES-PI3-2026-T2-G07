@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela de transicao apos autenticacao.
+/// Resolve carregamento inicial e encaminha o usuario para a home
+/// adequada conforme o contexto de sessao.
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/network/api_client.dart';

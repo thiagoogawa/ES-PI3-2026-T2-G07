@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Utilitario de suporte ao backend.
+ * Agrupa funcoes auxiliares compartilhadas por services e
+ * controllers para evitar duplicacao de logica.
+ */
+
 import {Timestamp} from "firebase-admin/firestore";
 
 export const isRecord = (

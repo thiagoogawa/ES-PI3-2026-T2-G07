@@ -1,9 +1,16 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Controlador da camada de apresentacao do fluxo de autenticacao.
+/// Coordena estado, chamadas assicronas e notificacoes para as
+/// telas que dependem do usuario autenticado.
+
 import 'package:flutter/foundation.dart';
 import '../../../../core/errors/auth_exception_mapper.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class AuthController extends ChangeNotifier {
+  /// Gerencia o estado observável das ações de autenticação no aplicativo.
   final AuthRepository _authRepository;
 
   AuthController(this._authRepository);
@@ -13,6 +20,7 @@ class AuthController extends ChangeNotifier {
   AuthenticatedUser? currentUser;
 
   Future<void> restoreSession() async {
+    /// Restaura a sessão persistida, quando houver, e atualiza os observadores.
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -28,6 +36,7 @@ class AuthController extends ChangeNotifier {
   }
 
   String? validateCredentials({
+    /// Valida credenciais básicas antes de enviar o formulário ao backend.
     required String email,
     required String password,
   }) {
@@ -47,6 +56,7 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> signIn({required String email, required String password}) async {
+    /// Executa login remoto e publica o usuário autenticado no estado local.
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -65,6 +75,7 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> signUp({
+    /// Cria uma conta nova e armazena o usuário resultante no estado do app.
     required String fullName,
     required String cpf,
     required String phone,
@@ -92,12 +103,14 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    /// Encerra a sessão atual e limpa o usuário mantido em memória.
     await _authRepository.signOut();
     currentUser = null;
     notifyListeners();
   }
 
   Future<bool> sendPasswordResetEmail({required String email}) async {
+    /// Solicita o envio do e-mail de recuperação e informa se a operação concluiu.
     isLoading = true;
     errorMessage = null;
     notifyListeners();

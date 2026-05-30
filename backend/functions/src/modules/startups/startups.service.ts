@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Service do modulo de startups.
+ * Concentra regras de negocio, acesso a dados e validacoes
+ * necessarias antes de responder aos endpoints da API.
+ */
+
 import {adminDb} from "../../config/firebase-admin";
 import {AppError} from "../../core/errors/app-error";
 import {AuthError} from "../../core/errors/auth-error";

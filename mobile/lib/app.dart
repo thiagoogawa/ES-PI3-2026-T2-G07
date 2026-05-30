@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Configura a arvore raiz do aplicativo Flutter.
+/// Concentra MaterialApp, tema, navegacao inicial e integracoes
+/// necessarias para o fluxo principal do app.
+
 import 'package:flutter/material.dart';
 import 'features/auth/presentation/pages/startup_splash_page.dart';
 

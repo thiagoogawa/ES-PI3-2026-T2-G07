@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela de apoio ao fluxo de trading.
+/// Organiza a experiencia de negociacao e os componentes visuais
+/// relacionados ao mercado secundario.
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/errors/user_friendly_error_mapper.dart';

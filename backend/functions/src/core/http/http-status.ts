@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Utilitario HTTP compartilhado pelo backend.
+ * Centraliza convencoes de resposta, status e execucao segura
+ * para reduzir repeticao nos controllers da API.
+ */
+
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,

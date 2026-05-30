@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ * Centraliza a logica de autenticacao e perfil do usuario.
+ *
+ * Centraliza validacao do token Firebase, sincronizacao basica do perfil do
+ * usuario e montagem do payload devolvido para o mobile em /v1/auth.
+ */
+
 import {DecodedIdToken} from "firebase-admin/auth";
 import {ValidationError} from "../../core/errors/validation-error";
 import {adminAuth} from "../../config/firebase-admin";
@@ -11,11 +19,14 @@ import {
 import {StartupsService} from "../startups/startups.service";
 
 /**
- * Service with Firebase Auth token operations.
+ * Encapsula operacoes de autenticacao e montagem do perfil autenticado.
  */
 export class AuthService {
   /**
-   * Verifies a Firebase ID token from the Authorization header.
+   * Valida o bearer token recebido no header Authorization.
+   *
+   * Se o token for invalido, ausente ou expirado, a excecao eh convertida para
+   * [AuthError] com um codigo semantico consumivel pela API.
    */
   static async verifyIdToken(
     authorizationHeader?: string,
@@ -36,7 +47,10 @@ export class AuthService {
   }
 
   /**
-   * Builds the public response payload for the authenticated user.
+    * Monta o payload publico devolvido ao mobile em /auth/me.
+    *
+    * Alem dos dados do token, agrega perfil persistido, saldo, papeis e a lista
+    * de startups que o usuario administra.
    */
   static async buildWhoAmI(decodedToken: DecodedIdToken) {
     await syncBasicUserProfile(decodedToken);
@@ -70,6 +84,13 @@ export class AuthService {
     };
   }
 
+  /**
+   * Atualiza o perfil persistido do usuario autenticado.
+   *
+   * O metodo aplica validacoes basicas de nome, CPF e telefone, tenta refletir
+   * o nome tambem no Firebase Auth e devolve o mesmo formato resumido usado em
+   * [buildWhoAmI].
+   */
   static async updateProfile(
     decodedToken: DecodedIdToken,
     input: Record<string, unknown>,

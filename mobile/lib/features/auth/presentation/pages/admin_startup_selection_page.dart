@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela de selecao de startup administrada.
+/// Permite escolher qual startup sera gerenciada quando o usuario
+/// possui responsabilidade sobre mais de uma empresa.
+
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/authenticated_user.dart';

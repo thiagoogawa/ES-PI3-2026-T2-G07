@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Controller HTTP do modulo de transacoes.
+ * Traduz requisicoes e respostas Express para chamadas de alto
+ * nivel nas regras de negocio do respectivo modulo.
+ */
+
 import {Request, Response} from "express";
 import {AuthError} from "../../core/errors/auth-error";
 import {HTTP_STATUS} from "../../core/http/http-status";

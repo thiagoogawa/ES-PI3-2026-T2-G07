@@ -1,14 +1,22 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Fonte de dados do modulo de startups.
+/// Centraliza chamadas ao backend para listagem, detalhe, FAQ e
+/// operacoes de negociacao ligadas ao marketplace.
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/startup_detail_model.dart';
 import '../models/startup_model.dart';
 
 class StartupsApiDataSource {
+  /// Encapsula as operações HTTP ligadas à consulta e gestão de startups.
   final ApiClient _apiClient;
 
   StartupsApiDataSource(this._apiClient);
 
   Future<List<StartupModel>> fetchStartups() async {
+    /// Carrega a lista pública de startups exibida no marketplace.
     final response = await _apiClient.get(ApiConstants.startups);
     final data = response['data'] as List<dynamic>? ?? [];
 
@@ -18,6 +26,7 @@ class StartupsApiDataSource {
   }
 
   Future<StartupDetailModel> fetchStartupDetail(String startupId) async {
+    /// Busca o detalhamento público de uma startup específica.
     final response = await _apiClient.get(
       ApiConstants.startupDetail(startupId),
     );
@@ -25,6 +34,7 @@ class StartupsApiDataSource {
   }
 
   Future<StartupDetailModel> fetchStartupDetailAuthenticated(
+    /// Busca o detalhamento autenticado incluindo campos liberados ao investidor.
     String idToken,
     String startupId,
   ) async {
@@ -40,6 +50,7 @@ class StartupsApiDataSource {
   }
 
   Future<void> submitQuestion(
+    /// Envia uma pergunta para a FAQ pública ou privada da startup.
     String startupId, {
     required String question,
     required bool isPublic,
@@ -57,6 +68,7 @@ class StartupsApiDataSource {
   }
 
   Future<StartupDetailModel> updateStartup(
+    /// Atualiza os dados editáveis de uma startup gerenciada por administrador.
     String idToken, {
     required String startupId,
     required String name,
@@ -94,6 +106,7 @@ class StartupsApiDataSource {
   }
 
   Future<StartupDetailModel> answerQuestion(
+    /// Registra a resposta administrativa para uma pergunta da FAQ.
     String idToken, {
     required String startupId,
     required String questionId,

@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Configuracao de lint do backend em Cloud Functions.
+ * Define regras de estilo e consistencia para manter o codigo
+ * TypeScript previsivel durante desenvolvimento e revisao.
+ */
+
 module.exports = {
   root: true,
   env: {

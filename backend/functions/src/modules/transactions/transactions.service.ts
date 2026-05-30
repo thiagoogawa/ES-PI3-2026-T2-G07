@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Service do modulo de transacoes.
+ * Concentra regras de negocio, acesso a dados e validacoes
+ * necessarias antes de responder aos endpoints da API.
+ */
+
 import {adminDb} from "../../config/firebase-admin";
 import {readNumber, readString, toIsoDate} from "../../utils/firestore-helpers";
 

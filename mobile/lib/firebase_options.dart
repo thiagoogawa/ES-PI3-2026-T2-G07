@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Define as opcoes de inicializacao do Firebase por plataforma.
+/// Esse arquivo fornece as credenciais e identificadores usados no
+/// bootstrap do app para Android, iOS, web e desktop.
+
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;

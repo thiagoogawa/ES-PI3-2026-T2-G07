@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Widget auxiliar do fluxo de logout.
+/// Centraliza a confirmacao de saida e o encerramento seguro da
+/// sessao para evitar repeticao nas telas autenticadas.
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 

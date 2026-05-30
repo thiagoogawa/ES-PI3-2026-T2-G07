@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Modelo de dados do modulo de autenticacao.
+/// Responsavel por serializar e desserializar payloads trocados
+/// entre as entidades de dominio e as fontes externas.
+
 import '../../domain/entities/authenticated_user.dart';
 
 class AuthenticatedUserModel extends AuthenticatedUser {

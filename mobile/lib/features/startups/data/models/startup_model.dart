@@ -1,6 +1,14 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Modelo de dados do modulo de startups.
+/// Converte payloads da API em estruturas adequadas para consumo
+/// pela camada de dominio e pelas telas do app.
+
 import '../../domain/entities/startup.dart';
 
 class StartupModel extends Startup {
+  /// Modelo serializável que adapta o payload resumido de startup para a entidade
+  /// de domínio usada pelo app.
   const StartupModel({
     required super.id,
     required super.name,
@@ -14,6 +22,7 @@ class StartupModel extends Startup {
   });
 
   factory StartupModel.fromJson(Map<String, dynamic> json) {
+    /// Constrói o modelo a partir do JSON devolvido pela API de listagem.
     final variation = json['variation'] as Map<String, dynamic>?;
 
     return StartupModel(

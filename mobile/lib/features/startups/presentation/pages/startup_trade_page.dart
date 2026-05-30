@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela dedicada ao fluxo de negociacao de uma startup.
+/// Reune formulario, saldo disponivel e validacoes necessarias
+/// para compra ou venda de participacoes.
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/errors/user_friendly_error_mapper.dart';

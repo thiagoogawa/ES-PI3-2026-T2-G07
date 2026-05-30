@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Inicializa e compartilha o acesso administrativo ao Firebase.
+ * Concentra app, auth e Firestore para evitar multiplas
+ * instancias e padronizar o acesso aos servicos.
+ */
+
 import {getApps, initializeApp} from "firebase-admin/app";
 import {getAuth} from "firebase-admin/auth";
 import {getFirestore} from "firebase-admin/firestore";

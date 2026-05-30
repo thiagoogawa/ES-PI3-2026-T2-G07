@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Fonte de dados do modulo de startups.
+/// Centraliza chamadas ao backend para listagem, detalhe, FAQ e
+/// operacoes de negociacao ligadas ao marketplace.
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/startup_offer_model.dart';

@@ -1,3 +1,12 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ * Lucca Schroelder Scovini - RA: 24011609
+ *
+ * Definicao das rotas HTTP do modulo de portfolio.
+ * Declara endpoints, middlewares e vinculacao com os handlers
+ * responsaveis por cada operacao exposta.
+ */
+
 import {Router} from "express";
 import {authMiddleware} from "../../middlewares/auth.middleware";
 import {asyncHandler} from "../../core/http/async-handler";

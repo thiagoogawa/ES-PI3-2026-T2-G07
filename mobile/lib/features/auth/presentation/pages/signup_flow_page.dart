@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela de cadastro de novos usuarios.
+/// Organiza o fluxo de criacao de conta e os dados exigidos para
+/// habilitar o acesso ao aplicativo.
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_snackbar.dart';

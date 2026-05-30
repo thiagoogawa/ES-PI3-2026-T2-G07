@@ -1,3 +1,12 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ * Lucca Schroelder Scovini - RA: 24011609
+ *
+ * Controller HTTP do modulo de portfolio.
+ * Traduz requisicoes e respostas Express para chamadas de alto
+ * nivel nas regras de negocio do respectivo modulo.
+ */
+
 import {Request, Response} from "express";
 import {AuthError} from "../../core/errors/auth-error";
 import {HTTP_STATUS} from "../../core/http/http-status";

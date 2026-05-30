@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Agrupador das rotas versionadas da API.
+ * Organiza os modulos publicos e protegidos sob o prefixo v1
+ * para manter o versionamento previsivel.
+ */
+
 import {Router} from "express";
 import {devRouter} from "../modules/dev/dev.routes";
 import {authRouter} from "../modules/auth/auth.routes";

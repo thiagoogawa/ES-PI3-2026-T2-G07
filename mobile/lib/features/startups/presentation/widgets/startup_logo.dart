@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Widget reutilizavel das telas de startups.
+/// Padroniza elementos visuais usados no marketplace e melhora a
+/// consistencia das informacoes apresentadas ao investidor.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 

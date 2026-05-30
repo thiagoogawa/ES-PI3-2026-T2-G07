@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela de recuperacao de senha.
+/// Guia o usuario na solicitacao de redefinicao de credenciais e
+/// apresenta o retorno necessario para concluir o fluxo.
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_snackbar.dart';

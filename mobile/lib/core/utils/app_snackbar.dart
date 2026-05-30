@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Utilitario compartilhado entre diferentes fluxos do mobile.
+/// Centraliza comportamento reaproveitavel para reduzir duplicacao
+/// e manter a interface mais consistente.
+
 import 'package:flutter/material.dart';
 
 enum AppSnackBarType { error, success, info }

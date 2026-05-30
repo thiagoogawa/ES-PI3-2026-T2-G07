@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Parte da implementacao da home dedicada ao deposito ficticio.
+/// Mantem isolada a interface para credito de saldo sem poluir
+/// o arquivo principal da tela.
+
 part of 'home_page.dart';
 
 enum _PortfolioAction { deposit }

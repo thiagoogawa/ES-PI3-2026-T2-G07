@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Middleware de autenticacao das rotas protegidas.
+ * Valida o usuario autenticado e injeta no request o contexto
+ * necessario para regras de autorizacao posteriores.
+ */
+
 import {NextFunction, Request, Response} from "express";
 import {AuthService} from "../modules/auth/auth.service";
 import {AuthError} from "../core/errors/auth-error";

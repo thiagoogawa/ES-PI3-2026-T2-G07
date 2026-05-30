@@ -1,4 +1,12 @@
 /**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Define erros de dominio usados pela API.
+ * Essas classes padronizam status, codigo e mensagem para que o
+ * tratamento de falhas seja consistente entre modulos.
+ */
+
+/**
  * Base application error with normalized HTTP metadata.
  */
 export class AppError extends Error {

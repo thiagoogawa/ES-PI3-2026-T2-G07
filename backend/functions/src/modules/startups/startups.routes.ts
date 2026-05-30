@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Definicao das rotas HTTP do modulo de startups.
+ * Declara endpoints, middlewares e vinculacao com os handlers
+ * responsaveis por cada operacao exposta.
+ */
+
 import {Router} from "express";
 import {
   authMiddleware,

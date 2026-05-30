@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Fonte de dados usada pelo modulo de autenticacao.
+/// Encapsula acesso a Firebase, armazenamento ou backend para
+/// manter a camada superior livre de detalhes de infraestrutura.
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/authenticated_user_model.dart';

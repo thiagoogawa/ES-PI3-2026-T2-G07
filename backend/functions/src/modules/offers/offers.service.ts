@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Service do modulo de ofertas.
+ * Concentra regras de negocio, acesso a dados e validacoes
+ * necessarias antes de responder aos endpoints da API.
+ */
+
 import {DecodedIdToken} from "firebase-admin/auth";
 import {FieldValue} from "firebase-admin/firestore";
 import {adminDb} from "../../config/firebase-admin";

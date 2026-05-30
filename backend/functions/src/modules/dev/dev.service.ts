@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Service do modulo de desenvolvimento.
+ * Concentra regras de negocio, acesso a dados e validacoes
+ * necessarias antes de responder aos endpoints da API.
+ */
+
 import {FieldValue} from "firebase-admin/firestore";
 import {adminDb} from "../../config/firebase-admin";
 import {
@@ -18,6 +26,10 @@ interface SeedUserInput {
 interface SeedDemoInput {
   users?: SeedUserInput[];
 }
+
+/**
+ * Estrutura minima aceita para criar usuarios de demonstração.
+ */
 
 const startupAId = "Xu2tL6Ap7bIzEdY4ES2r";
 const startupBId = "startup_demo_health_001";
@@ -141,7 +153,14 @@ const buildSeedUsers = (users: SeedUserInput[]) => {
   ];
 };
 
+/**
+ * Concentra a preparação de dados demo usados em ambiente local e homologação.
+ */
 export class DevService {
+  /**
+  * Cria ou atualiza usuários, startups e documentos relacionados com dados de
+  * demonstração para facilitar testes manuais do sistema.
+  */
   static async seedDemoData(input: SeedDemoInput) {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);

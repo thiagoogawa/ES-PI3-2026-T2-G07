@@ -1,3 +1,10 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+/// Lucca Schroelder Scovini - RA: 24011609
+///
+/// Tela de entrada de usuario.
+/// Agrupa autenticacao, feedback de erro e navegacao inicial para
+/// usuarios que ainda nao possuem sessao valida.
+
 import 'package:flutter/material.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/network/api_client.dart';

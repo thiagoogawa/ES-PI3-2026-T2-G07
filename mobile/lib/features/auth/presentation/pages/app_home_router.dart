@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Roteador interno da area autenticada.
+/// Decide qual home deve ser exibida com base no papel do usuario
+/// e no conjunto de startups administradas.
+
 import 'package:flutter/widgets.dart';
 
 import '../../domain/entities/authenticated_user.dart';

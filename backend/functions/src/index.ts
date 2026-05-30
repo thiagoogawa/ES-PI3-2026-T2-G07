@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Ponto de entrada das Cloud Functions HTTP.
+ * Exporta as funcoes publicas e concentra a configuracao global
+ * necessaria para disponibilizar a API no Firebase.
+ */
+
 import {setGlobalOptions} from "firebase-functions";
 import {onRequest} from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";

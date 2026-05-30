@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Componente compartilhado de tratamento de erros no mobile.
+/// Agrupa excecoes de dominio e mapeadores que convertem falhas
+/// tecnicas em mensagens adequadas para a interface.
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'app_exception.dart';
 

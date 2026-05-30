@@ -1,3 +1,11 @@
+/**
+ * Thiago Ryuji Ogawa - RA:24024450
+ *
+ * Utilitario para extrair o bearer token de requisicoes.
+ * Padroniza a leitura do header Authorization antes da
+ * validacao realizada pelo modulo de autenticacao.
+ */
+
 import {AuthError} from "../core/errors/auth-error";
 
 export const extractBearerToken = (

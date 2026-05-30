@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Contrato de repositorio do modulo de autenticacao.
+/// Define as operacoes esperadas pela camada de dominio sem acoplar
+/// o restante do app aos detalhes de Firebase ou HTTP.
+
 import '../entities/authenticated_user.dart';
 
 abstract class AuthRepository {

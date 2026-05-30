@@ -1,5 +1,6 @@
 /// Centralized API endpoints used throughout the application.
 /// Thiago Ryuji Ogawa - RA: 24024450
+/// Lucca Schroelder Scovini - RA: 24011609
 ///
 /// This class provides static constants and helper methods to build
 /// all backend URLs in a consistent and maintainable way.

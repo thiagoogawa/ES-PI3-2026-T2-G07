@@ -1,3 +1,9 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Widget visual da identidade da Mescla Invest.
+/// Padroniza o uso do logo em telas de autenticacao e reforca a
+/// consistencia visual do produto.
+
 import 'package:flutter/material.dart';
 
 class MesclaBrandLogo extends StatelessWidget {

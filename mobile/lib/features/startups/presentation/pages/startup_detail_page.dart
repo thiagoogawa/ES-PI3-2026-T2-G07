@@ -1,3 +1,11 @@
+/// Thiago Ryuji Ogawa - RA:24024450
+///
+/// Tela de detalhes de uma startup listada no marketplace.
+///
+/// Esta pagina combina dados cadastrais, indicadores operacionais, historico de
+/// preco, posicao atual do usuario e atalhos para a FAQ publica e fluxo de
+/// negociacao.
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -14,7 +22,11 @@ import '../../domain/entities/startup_detail.dart';
 import '../widgets/startup_logo.dart';
 import 'startup_faq_page.dart';
 
+/// Apresenta os detalhes completos de uma startup e o contexto de investimento
+/// do usuario autenticado.
 class StartupDetailPage extends StatefulWidget {
+  /// Startup resumida recebida da listagem anterior e usada como ponto de
+  /// entrada para carregar os detalhes completos.
   final Startup startup;
 
   const StartupDetailPage({super.key, required this.startup});
@@ -43,6 +55,8 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     _screenFuture = _loadScreenData();
   }
 
+  /// Busca em paralelo os detalhes da startup e o portfolio do usuario para
+  /// montar a visao consolidada da tela.
   Future<_StartupDetailViewData> _loadScreenData() async {
     final idToken = await _authRemoteDataSource.getIdToken();
     final results = await Future.wait<dynamic>([
@@ -59,6 +73,8 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     );
   }
 
+  /// Reexecuta a carga de dados mantendo o mesmo contrato consumido pelo
+  /// [FutureBuilder] da tela.
   Future<void> _reload() async {
     final future = _loadScreenData();
 
@@ -71,6 +87,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     await future;
   }
 
+  /// Abre a FAQ publica da startup e atualiza a tela quando o usuario retorna.
   Future<void> _openFaqPage() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -85,6 +102,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     await _reload();
   }
 
+  /// Formata valores monetarios no padrao brasileiro usado pela interface.
   String _formatCurrency(double value) {
     final fixed = value.toStringAsFixed(2);
     final parts = fixed.split('.');
@@ -102,10 +120,12 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     return 'R\$ ${buffer.toString()},${parts[1]}';
   }
 
+  /// Formata variacoes percentuais preservando o sinal positivo quando houver.
   String _formatPercent(double value) {
     return '${value >= 0 ? '+' : ''}${value.toStringAsFixed(2).replaceAll('.', ',')}%';
   }
 
+  /// Converte uma data ISO para o formato curto exibido no app.
   String _formatDate(String? value) {
     if (value == null || value.isEmpty) {
       return '-';
@@ -122,6 +142,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     return '$day/$month/$year';
   }
 
+  /// Ajusta quantidades para evitar casas decimais desnecessarias.
   String _formatQuantity(double value) {
     if (value == value.roundToDouble()) {
       return value.toStringAsFixed(0);
@@ -130,6 +151,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     return value.toStringAsFixed(2).replaceAll('.', ',');
   }
 
+  /// Define a cor visual usada para representar ganhos e perdas.
   Color _variationColor(double value) {
     if (value < 0) {
       return const Color(0xFFFF7A8B);
@@ -138,6 +160,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     return const Color(0xFF84B5FF);
   }
 
+  /// Renderiza um card simples de metrica usado em diferentes secoes da tela.
   Widget _buildMetricCard(String label, String value) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -167,6 +190,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     );
   }
 
+  /// Padroniza o estilo dos titulos de secao da pagina.
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -181,6 +205,7 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
     );
   }
 
+  /// Renderiza uma lista de chips para segmentos, tags e marcadores similares.
   Widget _buildChipList(List<String> items) {
     if (items.isEmpty) {
       return const Text(
@@ -191,6 +216,8 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
 
     return Wrap(
       spacing: 8,
+
+      /// Card de dashboard com suporte a cor semantica e texto auxiliar.
       runSpacing: 8,
       children: items
           .map(
@@ -212,6 +239,14 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
   }
 
   Widget _buildDashboardMetricCard({
+    /// Renderiza um card simples de metrica usado em diferentes secoes da tela.
+    /// Reexecuta a carga de dados mantendo o mesmo contrato consumido pelo
+    /// [FutureBuilder] da tela.
+    /// Formata valores monetarios no padrao brasileiro usado pela interface.
+    /// Formata variacoes percentuais preservando o sinal positivo quando houver.
+    /// Converte uma data ISO para o formato curto exibido no app.
+    /// Ajusta quantidades para evitar casas decimais desnecessarias.
+    /// Define a cor visual usada para representar ganhos e perdas.
     required String label,
     required String value,
     Color valueColor = Colors.white,
@@ -407,6 +442,8 @@ class _StartupDetailPageState extends State<StartupDetailPage> {
   }
 
   String _formatChartLabel(DateTime timestamp) {
+    /// Formata o label do gráfico com base no período selecionado.
+    /// Filtra a série de valorização com base no período selecionado.
     if (_selectedDashboardPeriod == _DashboardPeriod.daily) {
       final hour = timestamp.hour.toString().padLeft(2, '0');
       final minute = timestamp.minute.toString().padLeft(2, '0');
