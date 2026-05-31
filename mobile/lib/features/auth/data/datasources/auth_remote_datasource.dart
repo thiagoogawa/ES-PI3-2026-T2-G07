@@ -4,7 +4,31 @@
 /// Encapsula acesso a Firebase, armazenamento ou backend para
 /// manter a camada superior livre de detalhes de infraestrutura.
 
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
+
+class AuthSecondFactor {
+  final String uid;
+  final String? displayName;
+  final String? phoneNumber;
+
+  const AuthSecondFactor({
+    required this.uid,
+    required this.displayName,
+    required this.phoneNumber,
+  });
+}
+
+class AuthPhoneVerificationRequest {
+  final String verificationId;
+  final int? resendToken;
+
+  const AuthPhoneVerificationRequest({
+    required this.verificationId,
+    this.resendToken,
+  });
+}
 
 class AuthRemoteDataSource {
   final FirebaseAuth _firebaseAuth;
@@ -81,5 +105,99 @@ class AuthRemoteDataSource {
         iOSBundleId: _iosBundleId,
       ),
     );
+  }
+
+  List<AuthSecondFactor> getSecondFactors(MultiFactorResolver resolver) {
+    return resolver.hints
+        .whereType<PhoneMultiFactorInfo>()
+        .map((hint) {
+          return AuthSecondFactor(
+            uid: hint.uid,
+            displayName: hint.displayName,
+            phoneNumber: hint.phoneNumber,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  Future<AuthPhoneVerificationRequest> startSecondFactorSignIn({
+    required MultiFactorResolver resolver,
+    required String factorUid,
+  }) async {
+    final hint = _findPhoneFactorHint(resolver: resolver, factorUid: factorUid);
+
+    return _startPhoneVerification(
+      multiFactorSession: resolver.session,
+      multiFactorInfo: hint,
+    );
+  }
+
+  Future<UserCredential> resolveSecondFactorSignIn({
+    required MultiFactorResolver resolver,
+    required String verificationId,
+    required String smsCode,
+  }) {
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
+    final assertion = PhoneMultiFactorGenerator.getAssertion(credential);
+
+    return resolver.resolveSignIn(assertion);
+  }
+
+  PhoneMultiFactorInfo _findPhoneFactorHint({
+    required MultiFactorResolver resolver,
+    required String factorUid,
+  }) {
+    for (final hint in resolver.hints.whereType<PhoneMultiFactorInfo>()) {
+      if (hint.uid == factorUid) {
+        return hint;
+      }
+    }
+
+    throw FirebaseAuthException(
+      code: 'multi-factor-info-not-found',
+      message: 'Nao foi possivel localizar o fator selecionado.',
+    );
+  }
+
+  Future<AuthPhoneVerificationRequest> _startPhoneVerification({
+    required MultiFactorSession multiFactorSession,
+    required PhoneMultiFactorInfo multiFactorInfo,
+  }) async {
+    final completer = Completer<AuthPhoneVerificationRequest>();
+    var codeWasSent = false;
+
+    await _firebaseAuth.verifyPhoneNumber(
+      multiFactorSession: multiFactorSession,
+      multiFactorInfo: multiFactorInfo,
+      verificationCompleted: (_) {},
+      verificationFailed: (error) {
+        if (!completer.isCompleted) {
+          completer.completeError(error);
+        }
+      },
+      codeSent: (verificationId, resendToken) {
+        codeWasSent = true;
+        if (!completer.isCompleted) {
+          completer.complete(
+            AuthPhoneVerificationRequest(
+              verificationId: verificationId,
+              resendToken: resendToken,
+            ),
+          );
+        }
+      },
+      codeAutoRetrievalTimeout: (verificationId) {
+        if (codeWasSent && !completer.isCompleted) {
+          completer.complete(
+            AuthPhoneVerificationRequest(verificationId: verificationId),
+          );
+        }
+      },
+    );
+
+    return completer.future;
   }
 }
