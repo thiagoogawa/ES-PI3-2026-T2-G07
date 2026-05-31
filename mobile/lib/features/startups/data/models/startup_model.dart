@@ -6,6 +6,28 @@
 
 import '../../domain/entities/startup.dart';
 
+String _normalizeStartupStage(String? rawStage) {
+  final normalized = rawStage?.trim().toLowerCase() ?? '';
+
+  switch (normalized) {
+    case 'nova':
+    case 'novo':
+      return 'novo';
+    case 'tracao':
+    case 'tração':
+    case 'operacao':
+    case 'operação':
+      return 'operacao';
+    case 'expansao':
+    case 'expansão':
+      return 'expansao';
+    default:
+      return rawStage?.trim().isNotEmpty == true
+          ? rawStage!.trim()
+          : 'Nao informado';
+  }
+}
+
 class StartupModel extends Startup {
   /// Modelo serializável que adapta o payload resumido de startup para a entidade
   /// de domínio usada pelo app.
@@ -30,7 +52,7 @@ class StartupModel extends Startup {
       name: json['name'] as String? ?? 'Startup',
       photoUrl: json['photoUrl'] as String?,
       description: json['description'] as String? ?? '',
-      stage: json['stage'] as String? ?? 'Nao informado',
+      stage: _normalizeStartupStage(json['stage'] as String?),
       sector: json['sector'] as String?,
       currentPrice: (json['currentPrice'] as num?)?.toDouble() ?? 0,
       capitalRaised: (json['capitalRaised'] as num?)?.toDouble() ?? 0,

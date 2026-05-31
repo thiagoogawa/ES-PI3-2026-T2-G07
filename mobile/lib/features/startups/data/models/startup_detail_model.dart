@@ -6,6 +6,28 @@
 
 import '../../domain/entities/startup_detail.dart';
 
+String _normalizeStartupStage(String? rawStage) {
+  final normalized = rawStage?.trim().toLowerCase() ?? '';
+
+  switch (normalized) {
+    case 'nova':
+    case 'novo':
+      return 'novo';
+    case 'tracao':
+    case 'tração':
+    case 'operacao':
+    case 'operação':
+      return 'operacao';
+    case 'expansao':
+    case 'expansão':
+      return 'expansao';
+    default:
+      return rawStage?.trim().isNotEmpty == true
+          ? rawStage!.trim()
+          : 'Nao informado';
+  }
+}
+
 class StartupDetailModel extends StartupDetail {
   const StartupDetailModel({
     required super.id,
@@ -46,7 +68,7 @@ class StartupDetailModel extends StartupDetail {
       name: data['name'] as String? ?? 'Startup',
       photoUrl: data['photoUrl'] as String?,
       description: data['description'] as String? ?? '',
-      stage: data['stage'] as String? ?? 'Nao informado',
+      stage: _normalizeStartupStage(data['stage'] as String?),
       sector: data['sector'] as String?,
       currentPrice: (data['currentPrice'] as num?)?.toDouble() ?? 0,
       capitalRaised: (data['capitalRaised'] as num?)?.toDouble() ?? 0,
