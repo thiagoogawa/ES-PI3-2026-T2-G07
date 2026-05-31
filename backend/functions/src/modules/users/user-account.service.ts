@@ -12,6 +12,7 @@ import {
   Transaction,
 } from "firebase-admin/firestore";
 import {adminDb} from "../../config/firebase-admin";
+import {adminAuth} from "../../config/firebase-admin";
 import {
   isRecord,
   readBoolean,
@@ -291,7 +292,6 @@ export const syncBasicUserProfile = async (
     email: decodedToken.email ?? null,
     nome: decodedToken.name ?? null,
     telefone: decodedToken.phone_number ?? null,
-    mfaAtivo: false,
     updatedAt: FieldValue.serverTimestamp(),
   };
 
@@ -303,6 +303,23 @@ export const syncBasicUserProfile = async (
     profileUpdate,
     {merge: true},
   );
+};
+
+export const syncUserMfaState = async (uid: string): Promise<boolean> => {
+  const userRecord = await adminAuth.getUser(uid);
+  const mfaEnabled =
+    (userRecord.multiFactor?.enrolledFactors?.length ?? 0) > 0;
+
+  await getUserDocRef(uid).set(
+    {
+      uid,
+      mfaAtivo: mfaEnabled,
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    {merge: true},
+  );
+
+  return mfaEnabled;
 };
 
 export const creditUserBalance = async (

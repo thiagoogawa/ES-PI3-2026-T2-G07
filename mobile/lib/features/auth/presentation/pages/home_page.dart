@@ -20,6 +20,7 @@ import '../../data/datasources/auth_api_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/profile_storage_datasource.dart';
 import '../widgets/logout_flow.dart';
+import 'security_settings_page.dart';
 import '../../../startups/data/datasources/startups_api_datasource.dart';
 import '../../../startups/data/datasources/startup_trading_api_datasource.dart';
 import '../../../startups/data/models/startup_portfolio_snapshot_model.dart';
@@ -145,6 +146,26 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openEditProfilePage() async {
     final updatedUser = await Navigator.of(context).push<AuthenticatedUser>(
       MaterialPageRoute(builder: (_) => _EditProfilePage(user: _activeUser)),
+    );
+
+    if (updatedUser == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _currentUser = updatedUser;
+    });
+  }
+
+  Future<void> _openSecuritySettingsPage() async {
+    final updatedUser = await Navigator.of(context).push<AuthenticatedUser>(
+      MaterialPageRoute(
+        builder: (_) => SecuritySettingsPage(
+          initialUser: _activeUser,
+          authApiDataSource: _authApi,
+          authRemoteDataSource: _authRemote,
+        ),
+      ),
     );
 
     if (updatedUser == null || !mounted) {
@@ -1228,6 +1249,7 @@ class _HomePageState extends State<HomePage> {
     final emailStatus = _activeUser.emailVerified
         ? 'Verificado'
         : 'Nao verificado';
+    final mfaStatus = _activeUser.mfaEnabled ? '2FA ativo' : '2FA desativado';
     final profileName = _activeUser.name?.trim().isNotEmpty == true
         ? _activeUser.name!.trim()
         : _displayName();
@@ -1355,8 +1377,9 @@ class _HomePageState extends State<HomePage> {
         _buildProfileActionTile(
           icon: Icons.shield_outlined,
           title: 'Acesso e seguranca',
-          subtitle: '${_activeUser.email ?? '-'}  •  $emailStatus',
-          onTap: () => _refreshProfile(showFeedback: true),
+          subtitle:
+              '${_activeUser.email ?? '-'}  •  $emailStatus  •  $mfaStatus',
+          onTap: _openSecuritySettingsPage,
           iconBackground: const Color(0xFF17212F),
         ),
         const SizedBox(height: 12),

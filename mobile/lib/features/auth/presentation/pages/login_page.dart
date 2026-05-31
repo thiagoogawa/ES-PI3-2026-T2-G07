@@ -5,7 +5,9 @@
 /// Agrupa autenticacao, feedback de erro e navegacao inicial para
 /// usuarios que ainda nao possuem sessao valida.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/errors/auth_exception_mapper.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/datasources/auth_api_datasource.dart';
@@ -27,6 +29,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   late final AuthController controller;
+  late final AuthRemoteDataSource _authRemoteDataSource;
+  late final AuthApiDataSource _authApiDataSource;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -37,11 +41,11 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
 
+    _authRemoteDataSource = AuthRemoteDataSource();
+    _authApiDataSource = AuthApiDataSource(ApiClient());
+
     controller = AuthController(
-      AuthRepositoryImpl(
-        AuthRemoteDataSource(),
-        AuthApiDataSource(ApiClient()),
-      ),
+      AuthRepositoryImpl(_authRemoteDataSource, _authApiDataSource),
     );
 
     controller.addListener(() {
@@ -232,6 +236,36 @@ class _LoginPageState extends State<LoginPage> {
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
     );
+
+    final resolver = controller.pendingSecondFactorResolver;
+    if (resolver == null || !mounted) {
+      return;
+    }
+
+    if (_authSheetContext != null) {
+      Navigator.of(_authSheetContext!).pop();
+      _authSheetContext = null;
+    }
+
+    final authenticatedUser = await showModalBottomSheet<AuthenticatedUser>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF171717),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _MfaSignInSheet(
+        resolver: resolver,
+        authRemoteDataSource: _authRemoteDataSource,
+        authApiDataSource: _authApiDataSource,
+      ),
+    );
+
+    controller.clearPendingSecondFactorResolver();
+
+    if (authenticatedUser != null && mounted) {
+      await _handleAuthenticatedUser(authenticatedUser);
+    }
   }
 
   Future<void> _handleAuthenticatedUser(AuthenticatedUser user) async {
@@ -525,6 +559,324 @@ class _SheetSuccessLoadingState extends StatelessWidget {
               color: Color(0xFF84B5FF),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MfaSignInSheet extends StatefulWidget {
+  final MultiFactorResolver resolver;
+  final AuthRemoteDataSource authRemoteDataSource;
+  final AuthApiDataSource authApiDataSource;
+
+  const _MfaSignInSheet({
+    required this.resolver,
+    required this.authRemoteDataSource,
+    required this.authApiDataSource,
+  });
+
+  @override
+  State<_MfaSignInSheet> createState() => _MfaSignInSheetState();
+}
+
+class _MfaSignInSheetState extends State<_MfaSignInSheet> {
+  late final List<AuthSecondFactor> _factors;
+  final _codeController = TextEditingController();
+  int _selectedFactorIndex = 0;
+  bool _isSendingCode = false;
+  bool _isConfirmingCode = false;
+  AuthPhoneVerificationRequest? _verificationRequest;
+
+  @override
+  void initState() {
+    super.initState();
+    _factors = widget.authRemoteDataSource.mapSecondFactors(
+      widget.resolver.hints,
+    );
+  }
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  AuthSecondFactor get _selectedFactor => _factors[_selectedFactorIndex];
+
+  Future<void> _sendCode() async {
+    setState(() {
+      _isSendingCode = true;
+    });
+
+    try {
+      final request = await widget.authRemoteDataSource.startSecondFactorSignIn(
+        widget.resolver,
+        factor: _selectedFactor,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _verificationRequest = request;
+      });
+
+      if (request.wasAutoVerified) {
+        await _confirmCode();
+        return;
+      }
+
+      showAppSnackBar(
+        context,
+        message:
+            'Codigo SMS enviado para ${_selectedFactor.phoneNumber ?? 'o fator selecionado'}.',
+        type: AppSnackBarType.success,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      showAppSnackBar(
+        context,
+        message: mapAuthException(error),
+        type: AppSnackBarType.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSendingCode = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _confirmCode() async {
+    final request = _verificationRequest;
+    if (request == null) {
+      showAppSnackBar(
+        context,
+        message: 'Solicite o codigo SMS antes de confirmar o acesso.',
+        type: AppSnackBarType.error,
+      );
+      return;
+    }
+
+    if (!request.wasAutoVerified && _codeController.text.trim().isEmpty) {
+      showAppSnackBar(
+        context,
+        message: 'Digite o codigo enviado por SMS.',
+        type: AppSnackBarType.error,
+      );
+      return;
+    }
+
+    setState(() {
+      _isConfirmingCode = true;
+    });
+
+    try {
+      await widget.authRemoteDataSource.resolveSecondFactorSignIn(
+        resolver: widget.resolver,
+        request: request,
+        smsCode: _codeController.text.trim(),
+      );
+      final idToken = await widget.authRemoteDataSource.getIdToken(
+        forceRefresh: true,
+      );
+      final user = await widget.authApiDataSource.fetchMe(idToken);
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).pop(user);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      showAppSnackBar(
+        context,
+        message: mapAuthException(error),
+        type: AppSnackBarType.error,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isConfirmingCode = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasRequestedCode = _verificationRequest != null;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Confirmacao em duas etapas',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Selecione um fator cadastrado para receber o codigo de acesso.',
+            style: TextStyle(color: Color(0xFFBDBDBD), fontSize: 14),
+          ),
+          const SizedBox(height: 20),
+          ...List.generate(_factors.length, (index) {
+            final factor = _factors[index];
+            final isSelected = index == _selectedFactorIndex;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF202226),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFF3C78D8)
+                      : const Color(0xFF30353D),
+                ),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: hasRequestedCode || _isSendingCode || _isConfirmingCode
+                    ? null
+                    : () {
+                        setState(() {
+                          _selectedFactorIndex = index;
+                        });
+                      },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 22,
+                        width: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF84B5FF)
+                                : const Color(0xFF566070),
+                            width: 2,
+                          ),
+                        ),
+                        child: isSelected
+                            ? const Center(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF84B5FF),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: SizedBox(height: 10, width: 10),
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              factor.label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              factor.phoneNumber ?? 'Fator SMS configurado',
+                              style: const TextStyle(color: Color(0xFFB7BCC8)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+          if (hasRequestedCode) ...[
+            TextField(
+              controller: _codeController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Codigo SMS',
+                labelStyle: TextStyle(color: Color(0xFFBDBDBD)),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isSendingCode || _isConfirmingCode
+                  ? null
+                  : hasRequestedCode
+                  ? _confirmCode
+                  : _sendCode,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF346AC0),
+                foregroundColor: Colors.white,
+              ),
+              child: _isSendingCode || _isConfirmingCode
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      hasRequestedCode ? 'Confirmar codigo' : 'Enviar codigo',
+                    ),
+            ),
+          ),
+          if (hasRequestedCode) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: _isSendingCode || _isConfirmingCode
+                    ? null
+                    : () {
+                        setState(() {
+                          _verificationRequest = null;
+                          _codeController.clear();
+                        });
+                      },
+                child: const Text('Escolher outro fator'),
+              ),
+            ),
+          ],
         ],
       ),
     );
