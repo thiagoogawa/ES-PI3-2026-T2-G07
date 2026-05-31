@@ -5,6 +5,7 @@
 /// telas que dependem do usuario autenticado.
 
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/errors/auth_exception_mapper.dart';
 import '../../domain/entities/authenticated_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -18,6 +19,7 @@ class AuthController extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
   AuthenticatedUser? currentUser;
+  MultiFactorResolver? pendingSecondFactorResolver;
 
   Future<void> restoreSession() async {
     /// Restaura a sessão persistida, quando houver, e atualiza os observadores.
@@ -59,6 +61,7 @@ class AuthController extends ChangeNotifier {
     /// Executa login remoto e publica o usuário autenticado no estado local.
     isLoading = true;
     errorMessage = null;
+    pendingSecondFactorResolver = null;
     notifyListeners();
 
     try {
@@ -66,12 +69,19 @@ class AuthController extends ChangeNotifier {
         email: email,
         password: password,
       );
+    } on FirebaseAuthMultiFactorException catch (error) {
+      pendingSecondFactorResolver = error.resolver;
     } catch (error) {
       errorMessage = mapAuthException(error);
     } finally {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void clearPendingSecondFactorResolver() {
+    pendingSecondFactorResolver = null;
+    notifyListeners();
   }
 
   Future<void> signUp({

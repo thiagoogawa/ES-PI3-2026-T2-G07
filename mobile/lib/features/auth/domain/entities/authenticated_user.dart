@@ -22,6 +22,7 @@ class AuthenticatedUser {
   final String uid;
   final String? email;
   final bool emailVerified;
+  final bool mfaEnabled;
   final String? name;
   final String? cpf;
   final String? phone;
@@ -34,6 +35,7 @@ class AuthenticatedUser {
     required this.uid,
     required this.email,
     required this.emailVerified,
+    required this.mfaEnabled,
     required this.name,
     required this.cpf,
     required this.phone,
