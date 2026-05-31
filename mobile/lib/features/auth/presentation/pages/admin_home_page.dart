@@ -187,9 +187,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: const Color(0xFF0C0F14),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(widget.startup.name),
         actions: [
@@ -206,6 +209,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
+        backgroundColor: const Color(0xFF11161D),
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: const Color(0x223A7BDA),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        height: 72,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (value) {
           setState(() {
@@ -277,10 +285,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
             color: const Color(0xFF2E7DFF),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
               children: [
                 _AdminStartupHeader(user: widget.user),
-                const SizedBox(height: 20),
+                const SizedBox(height: 28),
                 if (_selectedIndex == 0)
                   _StartupEditTab(
                     key: ValueKey(
@@ -338,14 +346,21 @@ class _AdminStartupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF12335D), Color(0xFF1D6DC8)],
+          colors: [Color(0xFF163153), Color(0xFF2E6CBC)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,14 +369,18 @@ class _AdminStartupHeader extends StatelessWidget {
             'Ola, ${user.name ?? 'Admin'}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           const Text(
             'Gerencie os dados da startup e responda as perguntas publicadas no FAQ.',
-            style: TextStyle(color: Color(0xFFDCEAFF), height: 1.5),
+            style: TextStyle(
+              color: Color(0xFFE2ECFF),
+              height: 1.6,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
@@ -460,16 +479,16 @@ class _StartupEditTabState extends State<_StartupEditTab> {
           'Editar dados da startup',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         const Text(
           'Atualize os campos exibidos para investidores na tela de detalhes.',
-          style: TextStyle(color: Color(0xFFB7BCC8), height: 1.5),
+          style: TextStyle(color: Color(0xFF9FA8B7), height: 1.6),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         _AdminCard(
           child: Column(
             children: [
@@ -630,16 +649,16 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
           'Mensagens e FAQ',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         const Text(
           'Responda perguntas pendentes para manter o FAQ da startup atualizado.',
-          style: TextStyle(color: Color(0xFFB7BCC8), height: 1.5),
+          style: TextStyle(color: Color(0xFF9FA8B7), height: 1.6),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         if (questions.isEmpty)
           const _AdminCard(
             child: Text(
@@ -850,11 +869,17 @@ class _AdminCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF15181E),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF2B313C)),
+        color: const Color(0xFF121720),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: child,
     );
@@ -880,16 +905,24 @@ class _AdminTextField extends StatelessWidget {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFFB7BCC8)),
+        labelStyle: const TextStyle(color: Color(0xFF96A1B2)),
         filled: true,
-        fillColor: const Color(0xFF101318),
+        fillColor: const Color(0xFF0D1219),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF2B313C)),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Colors.transparent),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF2E7DFF)),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0x443A7BDA), width: 1.1),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Colors.transparent),
         ),
       ),
     );
