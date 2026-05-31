@@ -45,7 +45,7 @@ export interface UserAccount {
   updatedAt: string | null;
 }
 
-const DEFAULT_BALANCE = 100000;
+const DEFAULT_BALANCE = 0;
 const usersCollection = adminDb.collection("usuarios");
 
 const normalizePosition = (
