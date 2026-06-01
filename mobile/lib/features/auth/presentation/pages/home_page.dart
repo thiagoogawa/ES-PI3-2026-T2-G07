@@ -43,6 +43,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const String _allCatalogStages = 'all';
+  static const List<String> _catalogStageFilters = [
+    _allCatalogStages,
+    'novo',
+    'operacao',
+    'expansao',
+  ];
+
   late final StartupsApiDataSource _startupsApiDataSource;
   AuthApiDataSource? _authApiDataSource;
   StartupTradingApiDataSource? _startupTradingApiDataSource;
@@ -53,6 +61,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isRefreshingProfile = false;
   bool _isPortfolioBalanceVisible = true;
+  String _selectedCatalogStage = _allCatalogStages;
 
   static const List<Color> _portfolioChartColors = [
     Color(0xFF295AA5),
@@ -1457,21 +1466,194 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCatalog(List<Startup> startups) {
-    if (startups.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 120),
-          Center(
-            child: Text(
-              'Nenhuma startup encontrada.',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+  List<Startup> _filterCatalogStartups(List<Startup> startups) {
+    if (_selectedCatalogStage == _allCatalogStages) {
+      return startups;
+    }
+
+    return startups
+        .where(
+          (startup) =>
+              startup.stage.trim().toLowerCase() == _selectedCatalogStage,
+        )
+        .toList(growable: false);
+  }
+
+  String _catalogStageFilterLabel(String stage) {
+    switch (stage) {
+      case 'novo':
+        return 'Nova';
+      case 'operacao':
+        return 'Em operacao';
+      case 'expansao':
+        return 'Em expansao';
+      default:
+        return 'Todas';
+    }
+  }
+
+  void _clearCatalogStageFilter() {
+    if (_selectedCatalogStage == _allCatalogStages) {
+      return;
+    }
+
+    setState(() {
+      _selectedCatalogStage = _allCatalogStages;
+    });
+  }
+
+  Widget _buildCatalogSectionHeader() {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            'Acompanhe as Startups',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
             ),
           ),
+        ),
+        PopupMenuButton<String>(
+          initialValue: _selectedCatalogStage,
+          tooltip: 'Filtrar startups por estagio',
+          color: const Color(0xFF161A20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF303540)),
+          ),
+          onSelected: (value) {
+            if (value == _selectedCatalogStage) {
+              return;
+            }
+
+            setState(() {
+              _selectedCatalogStage = value;
+            });
+          },
+          itemBuilder: (context) {
+            return _catalogStageFilters
+                .map(
+                  (stage) => PopupMenuItem<String>(
+                    value: stage,
+                    child: Text(
+                      _catalogStageFilterLabel(stage),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                )
+                .toList(growable: false);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF171B22),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF2D3440)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _catalogStageFilterLabel(_selectedCatalogStage),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.filter_list_rounded,
+                  color: Color(0xFFB7BCC8),
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCatalogEmptyState() {
+    final hasActiveFilter = _selectedCatalogStage != _allCatalogStages;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: const Color(0xFF12161D),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFF2B313D)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 58,
+            width: 58,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A2330),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.filter_alt_off_rounded,
+              color: Color(0xFFD9E6FF),
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            hasActiveFilter
+                ? 'Nenhuma startup em ${_catalogStageFilterLabel(_selectedCatalogStage)}.'
+                : 'Nenhuma startup encontrada.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasActiveFilter
+                ? 'Remova o filtro para voltar a visualizar todas as startups da home.'
+                : 'Atualize a tela em alguns instantes para tentar carregar novas startups.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFFB7BCC8),
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          if (hasActiveFilter) ...[
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: _clearCatalogStageFilter,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF346AC0),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              label: const Text('Voltar para todas'),
+            ),
+          ],
         ],
-      );
-    }
+      ),
+    );
+  }
+
+  Widget _buildCatalog(List<Startup> startups) {
+    final filteredStartups = _filterCatalogStartups(startups);
 
     return RefreshIndicator(
       onRefresh: _reloadHomeData,
@@ -1483,29 +1665,26 @@ class _HomePageState extends State<HomePage> {
           const SliverToBoxAdapter(child: SizedBox(height: 22)),
           SliverToBoxAdapter(child: _buildPortfolioSummarySection()),
           const SliverToBoxAdapter(child: SizedBox(height: 22)),
-          const SliverToBoxAdapter(
-            child: Text(
-              'Acompanhe as Startups',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
+          SliverToBoxAdapter(child: _buildCatalogSectionHeader()),
+          const SliverToBoxAdapter(child: SizedBox(height: 14)),
+          if (filteredStartups.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: _buildCatalogEmptyState()),
+            )
+          else
+            SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.8,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _buildStartupCard(filteredStartups[index]),
+                childCount: filteredStartups.length,
               ),
             ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 14)),
-          SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.8,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => _buildStartupCard(startups[index]),
-              childCount: startups.length,
-            ),
-          ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
       ),
