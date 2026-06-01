@@ -10,6 +10,23 @@ import 'app_exception.dart';
 String mapAuthException(Object error) {
   if (error is FirebaseAuthException) {
     switch (error.code) {
+      case 'requires-recent-login':
+        return 'Confirme sua senha novamente para concluir esta operacao.';
+
+      case 'invalid-verification-code':
+        return 'O codigo SMS informado e invalido.';
+
+      case 'invalid-verification-id':
+      case 'session-expired':
+        return 'A verificacao expirou. Solicite um novo codigo.';
+
+      case 'missing-verification-code':
+        return 'Digite o codigo enviado por SMS.';
+
+      case 'multi-factor-auth-required':
+      case 'second-factor-required':
+        return 'Confirme o segundo fator para entrar.';
+
       case 'invalid-email':
         return 'E-mail invalido.';
 
@@ -29,6 +46,9 @@ String mapAuthException(Object error) {
 
       case 'too-many-requests':
         return 'Muitas tentativas. Tente novamente em alguns minutos.';
+
+      case 'quota-exceeded':
+        return 'O limite de SMS foi atingido. Tente novamente mais tarde.';
 
       case 'network-request-failed':
         return 'Falha de conexao. Verifique sua internet.';

@@ -14,6 +14,7 @@ import {AuthError} from "../../core/errors/auth-error";
 import {
   getOrCreateUserAccount,
   syncBasicUserProfile,
+  syncUserMfaState,
   updateUserProfile,
 } from "../users/user-account.service";
 import {StartupsService} from "../startups/startups.service";
@@ -55,6 +56,7 @@ export class AuthService {
   static async buildWhoAmI(decodedToken: DecodedIdToken) {
     await syncBasicUserProfile(decodedToken);
     const account = await getOrCreateUserAccount(decodedToken);
+    const mfaEnabled = await syncUserMfaState(decodedToken.uid);
     const managedStartups = await StartupsService.listManagedByUser(
       decodedToken.uid,
     );
@@ -78,7 +80,7 @@ export class AuthService {
       account: {
         balance: account.balance,
         reservedBalance: account.reservedBalance,
-        mfaEnabled: account.mfaEnabled,
+        mfaEnabled,
         portfolioSize: Object.keys(account.portfolio).length,
       },
     };
@@ -130,6 +132,7 @@ export class AuthService {
       ...decodedToken,
       name,
     });
+    const mfaEnabled = await syncUserMfaState(decodedToken.uid);
     const managedStartups = await StartupsService.listManagedByUser(
       decodedToken.uid,
     );
@@ -153,7 +156,7 @@ export class AuthService {
       account: {
         balance: account.balance,
         reservedBalance: account.reservedBalance,
-        mfaEnabled: account.mfaEnabled,
+        mfaEnabled,
         portfolioSize: Object.keys(account.portfolio).length,
       },
     };

@@ -82,50 +82,180 @@ O endpoint `POST /v1/startups/:startupId/trade`:
 
 ---
 
-## ⚙️ Backend E Deploy
+## 🗂️ Estrutura Do Repositório
 
-O backend de Cloud Functions está em [backend/functions](/Users/thiagoogawa/Documents/PUC%204%20semestre/PII%203%20-%20Mobile/ES-PI3-2026-T2-G07/backend/functions) e usa Firestore nomeado `mescla-inv`.
+- `backend/`: configuração Firebase, regras de Storage e Cloud Functions
+- `backend/functions/`: API em Node.js + TypeScript
+- `mobile/`: aplicativo Flutter
+- `docs/`: materiais de apoio, atas e artefatos de documentação
 
-### Rodar localmente
+---
 
-No diretório [backend](/Users/thiagoogawa/Documents/PUC%204%20semestre/PII%203%20-%20Mobile/ES-PI3-2026-T2-G07/backend):
+## ⚙️ Como Executar Em Ambiente De Testes
+
+Esta seção atende ao requisito do PDF de fornecer instruções claras para execução do sistema.
+
+### 1. Pré-requisitos
+
+Antes de executar o projeto, instale e configure:
+
+- Node.js `24.x` ou compatível com o valor definido em `backend/functions/package.json`
+- npm
+- Flutter SDK compatível com Dart `^3.11.0`
+- Firebase CLI (`npm install -g firebase-tools`)
+- Android Studio ou VS Code com SDK Android configurado
+- Um emulador Android, dispositivo Android físico, ou Chrome/macOS para testes do app
+
+### 2. Configurações já presentes no projeto
+
+- O app mobile já possui `firebase_options.dart` configurado para o projeto Firebase `mesclainvest-dev`
+- O `google-services.json` do Android já está versionado em `mobile/android/app/`
+- O backend utiliza o banco Firestore nomeado `mescla-inv`
+- A API local é exposta pelo emulador de Functions na porta `5001`
+
+### 3. Instalar dependências
+
+#### Backend
+
+No diretório raiz do projeto:
 
 ```bash
+cd backend/functions
+npm install
+```
+
+#### Mobile
+
+No diretório raiz do projeto:
+
+```bash
+cd mobile
+flutter pub get
+```
+
+### 4. Subir o backend local
+
+No diretório `backend/`:
+
+```bash
+cd backend
 FIRESTORE_DATABASE_ID=mescla-inv npm --prefix functions run serve
 ```
 
-Isso sobe o emulador das functions com build e lint configurados no `firebase.json`.
+Esse comando:
 
-### Deploy das functions
+- compila o TypeScript
+- executa o lint do backend no predeploy configurado
+- sobe o emulador de Cloud Functions
 
-No diretório [backend](/Users/thiagoogawa/Documents/PUC%204%20semestre/PII%203%20-%20Mobile/ES-PI3-2026-T2-G07/backend):
+### 5. Verificar se a API local está saudável
 
-```bash
-npm --prefix functions run deploy -- --project <firebase-project-id>
-```
-
-Se quiser validar antes do deploy:
+Após subir o backend, teste o endpoint de health:
 
 ```bash
-npm --prefix functions run lint
-npm --prefix functions run build
+curl http://127.0.0.1:5001/mesclainvest-dev/us-central1/api/health
 ```
 
-### Base URL do mobile
+Resposta esperada:
 
-Ambiente local:
+```json
+{
+	"success": true,
+	"message": "API is healthy",
+	"data": {
+		"status": "ok"
+	}
+}
+```
+
+### 6. Executar o app mobile apontando para a API local
+
+No diretório `mobile/`, rode um dos comandos abaixo.
+
+#### Android Emulator
 
 ```bash
-flutter run --dart-define=API_BASE_URL=http://127.0.0.1:5001/<firebase-project-id>/us-central1/api
+cd mobile
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5001/mesclainvest-dev/us-central1/api
 ```
 
-Em dispositivo Android usando o emulador, ajuste o host para `10.0.2.2` se necessário.
-
-Ambiente deployado:
+#### iOS Simulator, macOS ou Chrome
 
 ```bash
-flutter run --dart-define=API_BASE_URL=https://us-central1-<firebase-project-id>.cloudfunctions.net/api
+cd mobile
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:5001/mesclainvest-dev/us-central1/api
 ```
+
+#### Dispositivo Android físico
+
+Use o IP da máquina que está executando o backend, por exemplo:
+
+```bash
+cd mobile
+flutter run --dart-define=API_BASE_URL=http://192.168.0.10:5001/mesclainvest-dev/us-central1/api
+```
+
+### 7. Fluxo mínimo para validar o sistema
+
+Depois que backend e mobile estiverem rodando:
+
+1. criar conta com nome, CPF, telefone, e-mail e senha
+2. fazer login
+3. acessar a home e conferir o catálogo de startups
+4. consultar detalhes da startup, FAQ e documentos informativos
+5. depositar saldo fictício
+6. enviar ordem de compra ou venda no balcão
+7. acompanhar a atualização da carteira e da valorização dos tokens
+8. opcionalmente ativar 2FA em `Acesso e segurança`
+
+---
+
+## 🧪 Comandos Úteis De Validação
+
+### Backend
+
+```bash
+cd backend/functions
+npm run lint
+npm run build
+```
+
+### Mobile
+
+```bash
+cd mobile
+flutter analyze
+flutter test
+```
+
+---
+
+## ☁️ Execução Com Backend Deployado
+
+Se a API estiver publicada no Firebase, o mobile pode ser executado apontando para a URL remota:
+
+```bash
+cd mobile
+flutter run --dart-define=API_BASE_URL=https://us-central1-mesclainvest-dev.cloudfunctions.net/api
+```
+
+Para publicar as functions:
+
+```bash
+cd backend
+npm --prefix functions run deploy -- --project mesclainvest-dev
+```
+
+---
+
+## 📌 Observações Importantes
+
+- A negociação de tokens é totalmente simulada, sem integração com meios de pagamento reais
+- O backend foi construído em Node.js + TypeScript, conforme exigido no PDF
+- O aplicativo mobile foi construído em Flutter + Dart, conforme exigido no PDF
+- O banco utilizado é Firebase Firestore, conforme exigido no PDF
+- O acesso ao app depende de autenticação; não há fluxo anônimo
+- O 2FA por SMS depende da configuração do Firebase Authentication do projeto
 
 ---
 
