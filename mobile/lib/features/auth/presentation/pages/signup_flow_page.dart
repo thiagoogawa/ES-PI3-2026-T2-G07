@@ -292,32 +292,63 @@ class _SignupFlowPageState extends State<SignupFlowPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Para finalizar, precisamos que voce crie uma senha',
+          'Crie sua senha para finalizar o cadastro',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.w500,
             height: 1.35,
           ),
         ),
-        const SizedBox(height: 28),
-        const Text(
-          'Sua senha precisa ter pelo menos 6 caracteres.',
-          style: TextStyle(color: Color(0xFFE6E8EE), fontSize: 16, height: 1.6),
-        ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 22),
         TextField(
           controller: passwordController,
           obscureText: true,
+          textInputAction: TextInputAction.next,
           style: const TextStyle(color: Colors.white, fontSize: 18),
           decoration: _lineInputDecoration('Senha'),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 20),
         TextField(
           controller: confirmPasswordController,
           obscureText: true,
+          textInputAction: TextInputAction.done,
           style: const TextStyle(color: Colors.white, fontSize: 18),
           decoration: _lineInputDecoration('Confirme sua senha'),
+        ),
+        const SizedBox(height: 18),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF171A20),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF2C313B)),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: Icon(
+                  Icons.info_outline_rounded,
+                  color: Color(0xFF9FC0FF),
+                  size: 18,
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Sua senha precisa ter pelo menos 6 caracteres.',
+                  style: TextStyle(
+                    color: Color(0xFFE6E8EE),
+                    fontSize: 14,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

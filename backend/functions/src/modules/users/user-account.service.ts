@@ -11,8 +11,7 @@ import {
   FieldValue,
   Transaction,
 } from "firebase-admin/firestore";
-import {adminDb} from "../../config/firebase-admin";
-import {adminAuth} from "../../config/firebase-admin";
+import {adminAuth, adminDb} from "../../config/firebase-admin";
 import {
   isRecord,
   readBoolean,
@@ -46,7 +45,7 @@ export interface UserAccount {
   updatedAt: string | null;
 }
 
-const DEFAULT_BALANCE = 100000;
+const DEFAULT_BALANCE = 0;
 const usersCollection = adminDb.collection("usuarios");
 
 const normalizePosition = (
@@ -166,7 +165,7 @@ const normalizeRoles = (
   source: Record<string, unknown>,
   fallback?: string[],
 ): string[] => {
-  const roles = new Set<String>(fallback ?? []);
+  const roles = new Set<string>(fallback ?? []);
   const roleMap = readRecord(source, "papeis", "roles") ?? {};
 
   Object.entries(roleMap).forEach(([key, value]) => {
@@ -291,9 +290,14 @@ export const syncBasicUserProfile = async (
     uid: decodedToken.uid,
     email: decodedToken.email ?? null,
     nome: decodedToken.name ?? null,
-    telefone: decodedToken.phone_number ?? null,
+    mfaAtivo: false,
     updatedAt: FieldValue.serverTimestamp(),
   };
+
+  const phoneNumber = decodedToken.phone_number?.trim();
+  if (phoneNumber) {
+    profileUpdate.telefone = phoneNumber;
+  }
 
   if (decodedToken.picture) {
     profileUpdate.fotoPerfil = decodedToken.picture;

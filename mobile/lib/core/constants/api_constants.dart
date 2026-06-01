@@ -48,6 +48,10 @@ class ApiConstants {
   /// [startupId] - Unique identifier of the startup.
   static String startupDetail(String startupId) => '$startups/$startupId';
 
+  /// Returns the authenticated detail endpoint for a startup.
+  static String startupAuthenticatedDetail(String startupId) =>
+      '$startups/$startupId/authenticated';
+
   /// Returns the endpoint for trading a specific startup.
   ///
   /// [startupId] - Unique identifier of the startup.
@@ -65,6 +69,10 @@ class ApiConstants {
   /// Returns the endpoint to answer an FAQ question as startup admin.
   static String startupAnswerQuestion(String startupId, String questionId) =>
       '$startups/$startupId/questions/$questionId/answer';
+
+  /// Returns the endpoint to delete an FAQ question as startup admin.
+  static String startupDeleteQuestion(String startupId, String questionId) =>
+      '$startups/$startupId/questions/$questionId';
 
   /// Returns the endpoint to accept an offer.
   ///

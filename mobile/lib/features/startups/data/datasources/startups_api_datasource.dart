@@ -39,7 +39,7 @@ class StartupsApiDataSource {
     String startupId,
   ) async {
     final response = await _apiClient.get(
-      ApiConstants.startupDetail(startupId),
+      ApiConstants.startupAuthenticatedDetail(startupId),
       headers: {
         'Authorization': 'Bearer $idToken',
         'Content-Type': 'application/json',
@@ -119,6 +119,22 @@ class StartupsApiDataSource {
         'Content-Type': 'application/json',
       },
       body: {'answer': answer},
+    );
+
+    return StartupDetailModel.fromJson(response);
+  }
+
+  Future<StartupDetailModel> deleteQuestion(
+    String idToken, {
+    required String startupId,
+    required String questionId,
+  }) async {
+    final response = await _apiClient.delete(
+      ApiConstants.startupDeleteQuestion(startupId, questionId),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
     );
 
     return StartupDetailModel.fromJson(response);

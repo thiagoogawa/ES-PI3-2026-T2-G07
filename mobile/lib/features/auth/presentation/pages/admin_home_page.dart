@@ -172,6 +172,38 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 
+  Future<void> _deleteQuestion(String questionId) async {
+    try {
+      final idToken = await _authRemoteDataSource.getIdToken();
+      final updatedDetail = await _startupsApiDataSource.deleteQuestion(
+        idToken,
+        startupId: _selectedStartupId,
+        questionId: questionId,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _startupFuture = Future.value(updatedDetail);
+      });
+      _showMessage('Pergunta removida do FAQ.');
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage(
+        mapUserFriendlyError(
+          error,
+          fallbackMessage: 'Nao foi possivel remover a pergunta agora.',
+        ),
+        isError: true,
+      );
+    }
+  }
+
   Future<void> _signOut() async {
     await performLogoutFlow(context);
   }
@@ -184,12 +216,48 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
+  Widget _buildTabBody(StartupDetail detail) {
+    final tabContent = _selectedIndex == 0
+        ? _StartupEditTab(
+            key: ValueKey(
+              '${detail.id}-${detail.name}-${detail.executiveSummary}',
+            ),
+            detail: detail,
+            isSaving: _isSavingStartup,
+            onSubmit: _updateStartup,
+          )
+        : _StartupFaqMessagesTab(
+            key: ValueKey('faq-${detail.id}'),
+            detail: detail,
+            onAnswer: _answerQuestion,
+            onDelete: _deleteQuestion,
+          );
+
+    return RefreshIndicator(
+      onRefresh: _reloadSelectedStartup,
+      color: const Color(0xFF2E7DFF),
+      child: ListView(
+        key: ValueKey('admin-list-${detail.id}-$_selectedIndex'),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        children: [
+          _AdminStartupHeader(user: widget.user),
+          const SizedBox(height: 28),
+          tabContent,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: const Color(0xFF0C0F14),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(widget.startup.name),
         actions: [
@@ -206,6 +274,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
+        backgroundColor: const Color(0xFF11161D),
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: const Color(0x223A7BDA),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        height: 72,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (value) {
           setState(() {
@@ -272,32 +345,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             return _buildEmptyState();
           }
 
-          return RefreshIndicator(
-            onRefresh: _reloadSelectedStartup,
-            color: const Color(0xFF2E7DFF),
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              children: [
-                _AdminStartupHeader(user: widget.user),
-                const SizedBox(height: 20),
-                if (_selectedIndex == 0)
-                  _StartupEditTab(
-                    key: ValueKey(
-                      '${detail.id}-${detail.name}-${detail.executiveSummary}',
-                    ),
-                    detail: detail,
-                    isSaving: _isSavingStartup,
-                    onSubmit: _updateStartup,
-                  )
-                else
-                  _StartupFaqMessagesTab(
-                    detail: detail,
-                    onAnswer: _answerQuestion,
-                  ),
-              ],
-            ),
-          );
+          return _buildTabBody(detail);
         },
       ),
     );
@@ -338,14 +386,21 @@ class _AdminStartupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF12335D), Color(0xFF1D6DC8)],
+          colors: [Color(0xFF163153), Color(0xFF2E6CBC)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,14 +409,18 @@ class _AdminStartupHeader extends StatelessWidget {
             'Ola, ${user.name ?? 'Admin'}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           const Text(
             'Gerencie os dados da startup e responda as perguntas publicadas no FAQ.',
-            style: TextStyle(color: Color(0xFFDCEAFF), height: 1.5),
+            style: TextStyle(
+              color: Color(0xFFE2ECFF),
+              height: 1.6,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
@@ -460,16 +519,16 @@ class _StartupEditTabState extends State<_StartupEditTab> {
           'Editar dados da startup',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         const Text(
           'Atualize os campos exibidos para investidores na tela de detalhes.',
-          style: TextStyle(color: Color(0xFFB7BCC8), height: 1.5),
+          style: TextStyle(color: Color(0xFF9FA8B7), height: 1.6),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         _AdminCard(
           child: Column(
             children: [
@@ -586,8 +645,14 @@ class _StartupEditTabState extends State<_StartupEditTab> {
 class _StartupFaqMessagesTab extends StatefulWidget {
   final StartupDetail detail;
   final Future<void> Function(String questionId, String answer) onAnswer;
+  final Future<void> Function(String questionId) onDelete;
 
-  const _StartupFaqMessagesTab({required this.detail, required this.onAnswer});
+  const _StartupFaqMessagesTab({
+    super.key,
+    required this.detail,
+    required this.onAnswer,
+    required this.onDelete,
+  });
 
   @override
   State<_StartupFaqMessagesTab> createState() => _StartupFaqMessagesTabState();
@@ -596,6 +661,7 @@ class _StartupFaqMessagesTab extends StatefulWidget {
 class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
   String? _answeringQuestionId;
   String? _editingQuestionId;
+  String? _deletingQuestionId;
   late final TextEditingController _answerController;
 
   @override
@@ -630,16 +696,16 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
           'Mensagens e FAQ',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         const Text(
           'Responda perguntas pendentes para manter o FAQ da startup atualizado.',
-          style: TextStyle(color: Color(0xFFB7BCC8), height: 1.5),
+          style: TextStyle(color: Color(0xFF9FA8B7), height: 1.6),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         if (questions.isEmpty)
           const _AdminCard(
             child: Text(
@@ -648,151 +714,198 @@ class _StartupFaqMessagesTabState extends State<_StartupFaqMessagesTab> {
             ),
           )
         else
-          ...questions.map((question) {
-            final hasAnswer = question.answer?.trim().isNotEmpty ?? false;
-            final isBusy = _answeringQuestionId == question.id;
-            final isEditing = _editingQuestionId == question.id;
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _AdminCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: hasAnswer
-                                ? const Color(0x332E8B57)
-                                : const Color(0x33D68A12),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            hasAnswer ? 'Respondida' : 'Pendente',
-                            style: TextStyle(
-                              color: hasAnswer
-                                  ? const Color(0xFF89D4A3)
-                                  : const Color(0xFFFFC85C),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: question.isPublic
-                                ? const Color(0x332E7DFF)
-                                : const Color(0x338B5CF6),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            question.isPublic ? 'Publica' : 'Privada',
-                            style: TextStyle(
-                              color: question.isPublic
-                                  ? const Color(0xFF84B5FF)
-                                  : const Color(0xFFD3B4FF),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      question.question,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      hasAnswer
-                          ? question.answer!
-                          : 'Sem resposta publicada ainda.',
-                      style: TextStyle(
-                        color: hasAnswer
-                            ? const Color(0xFFD9DEE9)
-                            : const Color(0xFF8F96A3),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (isEditing) ...[
-                      _AdminTextField(
-                        controller: _answerController,
-                        label: 'Resposta',
-                        maxLines: 6,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: isBusy ? null : _cancelEditing,
-                              child: const Text('Cancelar'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: isBusy
-                                  ? null
-                                  : () => _submitAnswer(question),
-                              child: Text(
-                                isBusy ? 'Publicando...' : 'Publicar resposta',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: isBusy
-                            ? null
-                            : () => _startEditing(question),
-                        icon: isBusy
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.reply_rounded),
-                        label: Text(
-                          isEditing
-                              ? 'Editando resposta'
-                              : hasAnswer
-                              ? 'Editar resposta'
-                              : 'Responder',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+          ...questions.map(_buildQuestionCard),
       ],
     );
+  }
+
+  Widget _buildQuestionCard(StartupQuestion question) {
+    final hasAnswer = question.answer?.trim().isNotEmpty ?? false;
+    final isAnswerBusy = _answeringQuestionId == question.id;
+    final isDeleteBusy = _deletingQuestionId == question.id;
+    final isBusy = isAnswerBusy || isDeleteBusy;
+    final isEditing = _editingQuestionId == question.id;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: _AdminCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _FaqBadge(
+                  label: hasAnswer ? 'Respondida' : 'Pendente',
+                  backgroundColor: hasAnswer
+                      ? const Color(0x332E8B57)
+                      : const Color(0x33D68A12),
+                  foregroundColor: hasAnswer
+                      ? const Color(0xFF89D4A3)
+                      : const Color(0xFFFFC85C),
+                ),
+                _FaqBadge(
+                  label: question.isPublic ? 'Publica' : 'Privada',
+                  backgroundColor: question.isPublic
+                      ? const Color(0x332E7DFF)
+                      : const Color(0x338B5CF6),
+                  foregroundColor: question.isPublic
+                      ? const Color(0xFF84B5FF)
+                      : const Color(0xFFD3B4FF),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              question.question.trim().isEmpty
+                  ? 'Pergunta sem texto'
+                  : question.question,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hasAnswer
+                  ? (question.answer ?? '')
+                  : 'Sem resposta publicada ainda.',
+              style: TextStyle(
+                color: hasAnswer
+                    ? const Color(0xFFD9DEE9)
+                    : const Color(0xFF8F96A3),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (isEditing) ...[
+              _AdminTextField(
+                controller: _answerController,
+                label: 'Resposta',
+                maxLines: 6,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: isBusy ? null : () => _submitAnswer(question),
+                  child: Text(
+                    isAnswerBusy ? 'Publicando...' : 'Publicar resposta',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: isBusy ? null : _cancelEditing,
+                  child: const Text('Cancelar'),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isBusy ? null : () => _startEditing(question),
+                icon: isAnswerBusy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.reply_rounded),
+                label: Text(
+                  isEditing
+                      ? 'Editando resposta'
+                      : hasAnswer
+                      ? 'Editar resposta'
+                      : 'Responder',
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isBusy ? null : () => _confirmDelete(question),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFFFA2AE),
+                  side: const BorderSide(color: Color(0xFF3A2830)),
+                ),
+                icon: isDeleteBusy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFFFFA2AE),
+                        ),
+                      )
+                    : const Icon(Icons.delete_outline_rounded),
+                label: const Text('Remover'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(StartupQuestion question) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF171A20),
+          title: const Text(
+            'Remover pergunta',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Deseja remover esta pergunta do FAQ? Esta acao nao pode ser desfeita.',
+            style: TextStyle(color: Color(0xFFB7BCC8), height: 1.5),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFB33A4B),
+              ),
+              child: const Text('Remover'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _deletingQuestionId = question.id;
+    });
+
+    try {
+      await widget.onDelete(question.id);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _deletingQuestionId = null;
+        });
+      }
+    }
   }
 
   void _startEditing(StartupQuestion question) {
@@ -850,13 +963,50 @@ class _AdminCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF15181E),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF2B313C)),
+        color: const Color(0xFF121720),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: child,
+    );
+  }
+}
+
+class _FaqBadge extends StatelessWidget {
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  const _FaqBadge({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: foregroundColor,
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+        ),
+      ),
     );
   }
 }
@@ -880,16 +1030,24 @@ class _AdminTextField extends StatelessWidget {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFFB7BCC8)),
+        labelStyle: const TextStyle(color: Color(0xFF96A1B2)),
         filled: true,
-        fillColor: const Color(0xFF101318),
+        fillColor: const Color(0xFF0D1219),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF2B313C)),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Colors.transparent),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF2E7DFF)),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Color(0x443A7BDA), width: 1.1),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: Colors.transparent),
         ),
       ),
     );

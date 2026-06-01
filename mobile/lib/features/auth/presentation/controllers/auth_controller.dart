@@ -79,9 +79,13 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  void clearPendingSecondFactorResolver() {
+  void clearPendingSecondFactorChallenge() {
     pendingSecondFactorResolver = null;
     notifyListeners();
+  }
+
+  void clearPendingSecondFactorResolver() {
+    clearPendingSecondFactorChallenge();
   }
 
   Future<void> signUp({
