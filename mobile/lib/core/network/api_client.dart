@@ -57,6 +57,26 @@ class ApiClient {
     return _parseResponse(response);
   }
 
+  /// Executa uma requisicao DELETE e devolve o corpo decodificado como mapa.
+  Future<Map<String, dynamic>> delete(
+    String url, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
+    final request = http.Request('DELETE', Uri.parse(url));
+    if (headers != null) {
+      request.headers.addAll(headers);
+    }
+    if (body != null) {
+      request.body = jsonEncode(body);
+    }
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    return _parseResponse(response);
+  }
+
   /// Normaliza respostas HTTP da API.
   ///
   /// Status de sucesso devolvem o JSON bruto. Qualquer erro vira uma

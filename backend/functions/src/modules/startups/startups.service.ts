@@ -207,7 +207,7 @@ export class StartupsService {
       {merge: true},
     );
 
-    return StartupsService.getById(startupId);
+    return StartupsService.getById(startupId, user);
   }
 
   static async answerQuestion(
@@ -244,6 +244,28 @@ export class StartupsService {
       },
       {merge: true},
     );
+
+    return StartupsService.getById(startupId, user);
+  }
+
+  static async deleteQuestion(
+    startupId: string,
+    questionId: string,
+    user: DecodedIdToken,
+  ) {
+    const startupRef = await StartupsService.assertAdminAccess(startupId, user);
+    const questionRef = startupRef.collection("perguntas").doc(questionId);
+    const questionSnapshot = await questionRef.get();
+
+    if (!questionSnapshot.exists) {
+      throw new AppError(
+        "Question not found",
+        HTTP_STATUS.NOT_FOUND,
+        "QUESTION_NOT_FOUND",
+      );
+    }
+
+    await questionRef.delete();
 
     return StartupsService.getById(startupId, user);
   }

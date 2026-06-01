@@ -11,6 +11,7 @@ class AuthenticatedUserModel extends AuthenticatedUser {
     required super.uid,
     required super.email,
     required super.emailVerified,
+    required super.mfaEnabled,
     required super.name,
     required super.cpf,
     required super.phone,
@@ -22,6 +23,7 @@ class AuthenticatedUserModel extends AuthenticatedUser {
 
   factory AuthenticatedUserModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>;
+    final account = data['account'] as Map<String, dynamic>? ?? const {};
     final roles = data['roles'] as List<dynamic>? ?? const [];
     final managedStartups =
         data['managedStartups'] as List<dynamic>? ?? const [];
@@ -30,6 +32,7 @@ class AuthenticatedUserModel extends AuthenticatedUser {
       uid: data['uid'] as String,
       email: data['email'] as String?,
       emailVerified: data['emailVerified'] as bool? ?? false,
+      mfaEnabled: account['mfaEnabled'] as bool? ?? false,
       name: data['name'] as String?,
       cpf: data['cpf'] as String?,
       phone: data['phone'] as String?,

@@ -107,6 +107,105 @@ class AuthRemoteDataSource {
     );
   }
 
+  Future<void> sendEmailVerification() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'Nenhum usuario autenticado foi encontrado.',
+      );
+    }
+
+    await user.sendEmailVerification(
+      ActionCodeSettings(
+        url: _continueUrl,
+        handleCodeInApp: false,
+        androidPackageName: _androidPackageName,
+        androidInstallApp: true,
+        iOSBundleId: _iosBundleId,
+      ),
+    );
+  }
+
+  Future<void> reloadCurrentUser() async {
+    await _firebaseAuth.currentUser?.reload();
+  }
+
+  Future<List<AuthSecondFactor>> getCurrentSecondFactors() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      return const [];
+    }
+
+    final enrolledFactors = await user.multiFactor.getEnrolledFactors();
+
+    return enrolledFactors
+        .whereType<PhoneMultiFactorInfo>()
+        .map((factor) {
+          return AuthSecondFactor(
+            uid: factor.uid,
+            displayName: factor.displayName,
+            phoneNumber: factor.phoneNumber,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  Future<AuthPhoneVerificationRequest> startPhoneEnrollment({
+    required String phoneNumber,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'Nenhum usuario autenticado foi encontrado.',
+      );
+    }
+
+    final session = await user.multiFactor.getSession();
+
+    return _startPhoneVerification(
+      multiFactorSession: session,
+      phoneNumber: _normalizePhoneNumber(phoneNumber),
+    );
+  }
+
+  Future<void> enrollPhoneSecondFactor({
+    required String verificationId,
+    required String smsCode,
+    String? displayName,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'Nenhum usuario autenticado foi encontrado.',
+      );
+    }
+
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
+    final assertion = PhoneMultiFactorGenerator.getAssertion(credential);
+
+    await user.multiFactor.enroll(assertion, displayName: displayName);
+    await user.reload();
+  }
+
+  Future<void> unenrollSecondFactor(String factorUid) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'Nenhum usuario autenticado foi encontrado.',
+      );
+    }
+
+    await user.multiFactor.unenroll(factorUid: factorUid);
+    await user.reload();
+  }
+
   List<AuthSecondFactor> getSecondFactors(MultiFactorResolver resolver) {
     return resolver.hints
         .whereType<PhoneMultiFactorInfo>()
@@ -164,7 +263,8 @@ class AuthRemoteDataSource {
 
   Future<AuthPhoneVerificationRequest> _startPhoneVerification({
     required MultiFactorSession multiFactorSession,
-    required PhoneMultiFactorInfo multiFactorInfo,
+    PhoneMultiFactorInfo? multiFactorInfo,
+    String? phoneNumber,
   }) async {
     final completer = Completer<AuthPhoneVerificationRequest>();
     var codeWasSent = false;
@@ -172,6 +272,7 @@ class AuthRemoteDataSource {
     await _firebaseAuth.verifyPhoneNumber(
       multiFactorSession: multiFactorSession,
       multiFactorInfo: multiFactorInfo,
+      phoneNumber: phoneNumber,
       verificationCompleted: (_) {},
       verificationFailed: (error) {
         if (!completer.isCompleted) {
@@ -199,5 +300,33 @@ class AuthRemoteDataSource {
     );
 
     return completer.future;
+  }
+
+  String _normalizePhoneNumber(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-phone-number',
+        message: 'Informe um telefone valido.',
+      );
+    }
+
+    if (trimmed.startsWith('+')) {
+      return trimmed;
+    }
+
+    final digits = trimmed.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-phone-number',
+        message: 'Informe um telefone valido.',
+      );
+    }
+
+    if (digits.length == 10 || digits.length == 11) {
+      return '+55$digits';
+    }
+
+    return '+$digits';
   }
 }

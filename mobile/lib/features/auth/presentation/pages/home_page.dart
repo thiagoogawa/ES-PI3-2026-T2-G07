@@ -27,6 +27,7 @@ import '../../../startups/domain/entities/startup.dart';
 import '../../../startups/presentation/pages/startup_detail_page.dart';
 import '../../../startups/presentation/pages/trading_page.dart';
 import '../../../startups/presentation/widgets/startup_logo.dart';
+import 'security_settings_page.dart';
 
 part 'home_page_deposit.dart';
 part 'home_page_portfolio.dart';
@@ -154,6 +155,27 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _currentUser = updatedUser;
     });
+  }
+
+  Future<void> _openSecuritySettingsPage() async {
+    final updatedUser = await Navigator.of(context).push<AuthenticatedUser>(
+      MaterialPageRoute(
+        builder: (_) => SecuritySettingsPage(user: _activeUser),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (updatedUser != null) {
+      setState(() {
+        _currentUser = updatedUser;
+      });
+      return;
+    }
+
+    await _refreshProfile();
   }
 
   Future<StartupPortfolioSnapshotModel> _fetchPortfolio() async {
@@ -1356,7 +1378,7 @@ class _HomePageState extends State<HomePage> {
           icon: Icons.shield_outlined,
           title: 'Acesso e seguranca',
           subtitle: '${_activeUser.email ?? '-'}  •  $emailStatus',
-          onTap: () => _refreshProfile(showFeedback: true),
+          onTap: _openSecuritySettingsPage,
           iconBackground: const Color(0xFF17212F),
         ),
         const SizedBox(height: 12),

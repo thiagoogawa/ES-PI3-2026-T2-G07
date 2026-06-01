@@ -22,6 +22,11 @@ startupsRouter.get(
   optionalAuthMiddleware,
   asyncHandler(StartupsController.getById),
 );
+startupsRouter.get(
+  "/:startupId/authenticated",
+  authMiddleware,
+  asyncHandler(StartupsController.getAuthenticatedById),
+);
 startupsRouter.patch(
   "/:startupId",
   authMiddleware,
@@ -36,6 +41,11 @@ startupsRouter.patch(
   "/:startupId/questions/:questionId/answer",
   authMiddleware,
   asyncHandler(StartupsController.answerQuestion),
+);
+startupsRouter.delete(
+  "/:startupId/questions/:questionId",
+  authMiddleware,
+  asyncHandler(StartupsController.deleteQuestion),
 );
 startupsRouter.post(
   "/:startupId/trade",

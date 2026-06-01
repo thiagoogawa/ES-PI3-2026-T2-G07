@@ -36,6 +36,24 @@ export class StartupsController {
       .json(successResponse(startup, "Startup fetched successfully"));
   }
 
+  static async getAuthenticatedById(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const startup = await StartupsService.getById(
+      request.params.startupId,
+      request.user,
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(startup, "Startup fetched successfully"));
+  }
+
   static async submitQuestion(
     request: Request,
     response: Response,
@@ -88,6 +106,25 @@ export class StartupsController {
     response
       .status(HTTP_STATUS.OK)
       .json(successResponse(startup, "Question answered successfully"));
+  }
+
+  static async deleteQuestion(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    if (!request.user) {
+      throw new AuthError();
+    }
+
+    const startup = await StartupsService.deleteQuestion(
+      request.params.startupId,
+      request.params.questionId,
+      request.user,
+    );
+
+    response
+      .status(HTTP_STATUS.OK)
+      .json(successResponse(startup, "Question deleted successfully"));
   }
 
   static async trade(request: Request, response: Response): Promise<void> {
