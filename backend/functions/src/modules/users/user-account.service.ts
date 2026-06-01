@@ -290,10 +290,14 @@ export const syncBasicUserProfile = async (
     uid: decodedToken.uid,
     email: decodedToken.email ?? null,
     nome: decodedToken.name ?? null,
-    telefone: decodedToken.phone_number ?? null,
     mfaAtivo: false,
     updatedAt: FieldValue.serverTimestamp(),
   };
+
+  const phoneNumber = decodedToken.phone_number?.trim();
+  if (phoneNumber) {
+    profileUpdate.telefone = phoneNumber;
+  }
 
   if (decodedToken.picture) {
     profileUpdate.fotoPerfil = decodedToken.picture;
