@@ -84,6 +84,10 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearPendingSecondFactorResolver() {
+    clearPendingSecondFactorChallenge();
+  }
+
   Future<void> signUp({
     /// Cria uma conta nova e armazena o usuário resultante no estado do app.
     required String fullName,

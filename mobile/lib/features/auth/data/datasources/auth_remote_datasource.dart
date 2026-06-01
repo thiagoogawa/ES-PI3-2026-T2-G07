@@ -9,25 +9,54 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthSecondFactor {
+  final MultiFactorInfo? info;
   final String uid;
+  final String? factorId;
   final String? displayName;
   final String? phoneNumber;
 
   const AuthSecondFactor({
+    this.info,
     required this.uid,
+    this.factorId,
     required this.displayName,
     required this.phoneNumber,
   });
+
+  factory AuthSecondFactor.fromInfo(MultiFactorInfo info) {
+    return AuthSecondFactor(
+      info: info,
+      uid: info.uid,
+      factorId: info.factorId,
+      displayName: info.displayName,
+      phoneNumber: info is PhoneMultiFactorInfo ? info.phoneNumber : null,
+    );
+  }
+
+  String get label {
+    final trimmedDisplayName = displayName?.trim();
+    if (trimmedDisplayName != null && trimmedDisplayName.isNotEmpty) {
+      return trimmedDisplayName;
+    }
+
+    return phoneNumber ?? 'Segundo fator';
+  }
 }
 
 class AuthPhoneVerificationRequest {
   final String verificationId;
   final int? resendToken;
+  final PhoneAuthCredential? instantCredential;
 
   const AuthPhoneVerificationRequest({
     required this.verificationId,
     this.resendToken,
+    this.instantCredential,
   });
+
+  int? get forceResendingToken => resendToken;
+
+  bool get wasAutoVerified => instantCredential != null;
 }
 
 class AuthRemoteDataSource {
@@ -41,6 +70,8 @@ class AuthRemoteDataSource {
     : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
     _firebaseAuth.setLanguageCode('pt-BR');
   }
+
+  User? get currentUser => _firebaseAuth.currentUser;
 
   Future<UserCredential> signIn({
     required String email,
@@ -107,6 +138,19 @@ class AuthRemoteDataSource {
     );
   }
 
+  Future<void> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    final user = _requireCurrentUser();
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+  }
+
   Future<void> sendEmailVerification() async {
     final user = _firebaseAuth.currentUser;
     if (user == null) {
@@ -139,15 +183,17 @@ class AuthRemoteDataSource {
 
     final enrolledFactors = await user.multiFactor.getEnrolledFactors();
 
-    return enrolledFactors
+    return mapSecondFactors(enrolledFactors.whereType<PhoneMultiFactorInfo>());
+  }
+
+  Future<List<AuthSecondFactor>> getEnrolledSecondFactors() {
+    return getCurrentSecondFactors();
+  }
+
+  List<AuthSecondFactor> mapSecondFactors(Iterable<MultiFactorInfo> factors) {
+    return factors
         .whereType<PhoneMultiFactorInfo>()
-        .map((factor) {
-          return AuthSecondFactor(
-            uid: factor.uid,
-            displayName: factor.displayName,
-            phoneNumber: factor.phoneNumber,
-          );
-        })
+        .map(AuthSecondFactor.fromInfo)
         .toList(growable: false);
   }
 
@@ -171,7 +217,8 @@ class AuthRemoteDataSource {
   }
 
   Future<void> enrollPhoneSecondFactor({
-    required String verificationId,
+    String? verificationId,
+    AuthPhoneVerificationRequest? request,
     required String smsCode,
     String? displayName,
   }) async {
@@ -183,8 +230,16 @@ class AuthRemoteDataSource {
       );
     }
 
+    final effectiveVerificationId = verificationId ?? request?.verificationId;
+    if (effectiveVerificationId == null || effectiveVerificationId.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-verification-id',
+        message: 'Nao foi possivel validar o codigo SMS.',
+      );
+    }
+
     final credential = PhoneAuthProvider.credential(
-      verificationId: verificationId,
+      verificationId: effectiveVerificationId,
       smsCode: smsCode,
     );
     final assertion = PhoneMultiFactorGenerator.getAssertion(credential);
@@ -193,7 +248,7 @@ class AuthRemoteDataSource {
     await user.reload();
   }
 
-  Future<void> unenrollSecondFactor(String factorUid) async {
+  Future<void> unenrollSecondFactor(Object factor) async {
     final user = _firebaseAuth.currentUser;
     if (user == null) {
       throw FirebaseAuthException(
@@ -202,21 +257,21 @@ class AuthRemoteDataSource {
       );
     }
 
+    final factorUid = switch (factor) {
+      String value => value,
+      AuthSecondFactor value => value.uid,
+      _ => throw FirebaseAuthException(
+        code: 'multi-factor-info-not-found',
+        message: 'Nao foi possivel localizar o fator selecionado.',
+      ),
+    };
+
     await user.multiFactor.unenroll(factorUid: factorUid);
     await user.reload();
   }
 
   List<AuthSecondFactor> getSecondFactors(MultiFactorResolver resolver) {
-    return resolver.hints
-        .whereType<PhoneMultiFactorInfo>()
-        .map((hint) {
-          return AuthSecondFactor(
-            uid: hint.uid,
-            displayName: hint.displayName,
-            phoneNumber: hint.phoneNumber,
-          );
-        })
-        .toList(growable: false);
+    return mapSecondFactors(resolver.hints);
   }
 
   Future<AuthPhoneVerificationRequest> startSecondFactorSignIn({
@@ -233,11 +288,20 @@ class AuthRemoteDataSource {
 
   Future<UserCredential> resolveSecondFactorSignIn({
     required MultiFactorResolver resolver,
-    required String verificationId,
+    String? verificationId,
+    AuthPhoneVerificationRequest? request,
     required String smsCode,
   }) {
+    final effectiveVerificationId = verificationId ?? request?.verificationId;
+    if (effectiveVerificationId == null || effectiveVerificationId.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-verification-id',
+        message: 'Nao foi possivel validar o codigo SMS.',
+      );
+    }
+
     final credential = PhoneAuthProvider.credential(
-      verificationId: verificationId,
+      verificationId: effectiveVerificationId,
       smsCode: smsCode,
     );
     final assertion = PhoneMultiFactorGenerator.getAssertion(credential);
@@ -328,5 +392,17 @@ class AuthRemoteDataSource {
     }
 
     return '+$digits';
+  }
+
+  User _requireCurrentUser() {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'Nenhum usuario autenticado foi encontrado.',
+      );
+    }
+
+    return user;
   }
 }

@@ -165,7 +165,7 @@ const normalizeRoles = (
   source: Record<string, unknown>,
   fallback?: string[],
 ): string[] => {
-  const roles = new Set<String>(fallback ?? []);
+  const roles = new Set<string>(fallback ?? []);
   const roleMap = readRecord(source, "papeis", "roles") ?? {};
 
   Object.entries(roleMap).forEach(([key, value]) => {
